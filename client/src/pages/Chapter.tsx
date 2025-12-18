@@ -162,28 +162,7 @@ export default function Chapter() {
                   </div>
                 ) : (
                   <article 
-                    className="prose prose-lg dark:prose-invert max-w-none 
-                      prose-headings:font-heading prose-headings:font-semibold prose-headings:scroll-mt-24
-                      prose-h1:text-3xl prose-h1:border-b-2 prose-h1:border-primary/20 prose-h1:pb-4 prose-h1:mb-8
-                      prose-h2:text-2xl prose-h2:mt-16 prose-h2:mb-6 prose-h2:text-primary prose-h2:border-b prose-h2:border-border prose-h2:pb-3
-                      prose-h3:text-xl prose-h3:mt-10 prose-h3:mb-4 prose-h3:text-foreground/90 prose-h3:pl-4 prose-h3:border-l-4 prose-h3:border-primary/40
-                      prose-h4:text-lg prose-h4:mt-8 prose-h4:mb-3 prose-h4:text-muted-foreground prose-h4:font-medium
-                      prose-p:leading-relaxed prose-p:text-foreground/85 prose-p:mb-5
-                      prose-strong:text-foreground prose-strong:font-semibold
-                      prose-em:text-foreground/80
-                      prose-ul:my-6 prose-ul:pl-6 prose-ul:space-y-2
-                      prose-ol:my-6 prose-ol:pl-6 prose-ol:space-y-2
-                      prose-li:my-1 prose-li:marker:text-primary prose-li:leading-relaxed
-                      prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:bg-primary/5 
-                      prose-blockquote:py-4 prose-blockquote:px-6 prose-blockquote:rounded-r-xl prose-blockquote:not-italic prose-blockquote:my-8 prose-blockquote:shadow-sm
-                      prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:font-mono
-                      prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-pre:rounded-lg prose-pre:my-6
-                      prose-hr:my-12 prose-hr:border-border prose-hr:border-t-2
-                      prose-a:text-primary prose-a:underline-offset-4 hover:prose-a:text-primary/80
-                      prose-img:rounded-xl prose-img:shadow-lg
-                      [&>h2]:first-of-type:mt-0
-                      [&>h2+p]:mt-0 [&>h2+p]:text-muted-foreground
-                      [&>h3+p]:mt-0"
+                    className="chapter-content max-w-none"
                     data-testid="chapter-content"
                   >
                      <div dangerouslySetInnerHTML={{ __html: displayContent }} />
