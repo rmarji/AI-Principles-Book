@@ -1,4 +1,4 @@
-import { CheckCircle, XCircle, AlertCircle, FileText, ListChecks, BookOpen, MessageSquare, Target } from "lucide-react";
+import { CheckCircle, XCircle, AlertCircle, FileText, ListChecks, BookOpen, MessageSquare, Target, Quote, HelpCircle, CheckSquare, Heart, BookMarked } from "lucide-react";
 
 interface QualityCheck {
   id: string;
@@ -24,64 +24,149 @@ function countHeadings(content: string): number {
   return matches ? matches.length : 0;
 }
 
+function hasOpeningQuote(content: string): boolean {
+  const lines = content.split('\n').slice(0, 30);
+  for (const line of lines) {
+    if (line.includes('>') && line.includes('—')) return true;
+    if (line.startsWith('>')) return true;
+    if (/^["""].+["""]/.test(line.trim())) return true;
+  }
+  return false;
+}
+
+function hasKeyQuestion(content: string): boolean {
+  return /key question/i.test(content) || /\*key question\*/i.test(content);
+}
+
+function hasAnchorStatistic(content: string): boolean {
+  return /anchor statistic/i.test(content) || (/\d+%/.test(content) && /according to|research|study|data/i.test(content));
+}
+
+function countNumberedItems(content: string, sectionName: string): number {
+  const sectionMatch = content.match(new RegExp(`##?\\s*${sectionName}[\\s\\S]*?(?=##|$)`, 'i'));
+  if (!sectionMatch) return 0;
+  const section = sectionMatch[0];
+  const numberedItems = section.match(/^\d+\.\s+/gm);
+  return numberedItems ? numberedItems.length : 0;
+}
+
+function hasHabitsSection(content: string): boolean {
+  const hasHabits = checkSectionPresence(content, 'Habits');
+  const hasBeneficial = /beneficial/i.test(content);
+  const hasDetrimental = /detrimental/i.test(content);
+  return hasHabits && (hasBeneficial || hasDetrimental);
+}
+
+function hasConclusionSection(content: string): boolean {
+  return checkSectionPresence(content, 'Conclusion') || checkSectionPresence(content, 'Chapter Summary');
+}
+
 export function QualityChecklist({ wordCount, content, chapterId }: QualityChecklistProps) {
   const isLoading = wordCount === null || content === null;
   
   const minWordCount = 10000;
+  const maxWordCount = 11000;
   const passesWordCount = wordCount !== null && wordCount >= minWordCount;
+  const wordCountStatus = wordCount !== null 
+    ? (wordCount >= minWordCount && wordCount <= maxWordCount 
+      ? 'Optimal' 
+      : wordCount >= minWordCount 
+        ? 'Above target' 
+        : 'Below minimum')
+    : 'Checking...';
   
-  const hasSummary = content ? checkSectionPresence(content, 'Chapter Summary') || checkSectionPresence(content, 'Summary') : false;
-  const hasKeyTakeaways = content ? checkSectionPresence(content, 'Key Takeaways') : false;
-  const hasReflectionQuestions = content ? checkSectionPresence(content, 'Reflection Questions') : false;
-  const hasActionItems = content ? checkSectionPresence(content, 'Action Items') : false;
+  const hasQuote = content ? hasOpeningQuote(content) : false;
+  const hasQuestion = content ? hasKeyQuestion(content) : false;
+  const hasStatistic = content ? hasAnchorStatistic(content) : false;
   
   const headingCount = content ? countHeadings(content) : 0;
-  const hasAdequateStructure = headingCount >= 8;
+  const hasAdequateStructure = headingCount >= 8 && headingCount <= 15;
+  
+  const hasConclusionSec = content ? hasConclusionSection(content) : false;
+  
+  const summaryCount = content ? countNumberedItems(content, 'Summary') : 0;
+  const hasSummary = summaryCount >= 10;
+  
+  const assessmentCount = content ? countNumberedItems(content, 'Assessment') : 0;
+  const hasAssessment = assessmentCount >= 5 && assessmentCount <= 7;
+  
+  const goalsCount = content ? countNumberedItems(content, 'Goals') : 0;
+  const hasGoals = goalsCount >= 8 && goalsCount <= 10;
+  
+  const hasHabits = content ? hasHabitsSection(content) : false;
 
   const checks: QualityCheck[] = [
     {
       id: 'word-count',
       label: 'Word Count',
       description: wordCount !== null 
-        ? `${wordCount.toLocaleString()} / ${minWordCount.toLocaleString()} min`
+        ? `${wordCount.toLocaleString()} / ${minWordCount.toLocaleString()}-${maxWordCount.toLocaleString()}`
         : 'Checking...',
       passed: isLoading ? null : passesWordCount,
       icon: <FileText className="w-3.5 h-3.5" />
     },
     {
-      id: 'summary',
-      label: 'Chapter Summary',
-      description: hasSummary ? 'Present' : 'Missing',
-      passed: isLoading ? null : hasSummary,
-      icon: <BookOpen className="w-3.5 h-3.5" />
+      id: 'opening-quote',
+      label: 'Opening Quote',
+      description: hasQuote ? 'Present' : 'Missing',
+      passed: isLoading ? null : hasQuote,
+      icon: <Quote className="w-3.5 h-3.5" />
     },
     {
-      id: 'takeaways',
-      label: 'Key Takeaways',
-      description: hasKeyTakeaways ? 'Present' : 'Missing',
-      passed: isLoading ? null : hasKeyTakeaways,
-      icon: <ListChecks className="w-3.5 h-3.5" />
+      id: 'key-question',
+      label: 'Key Question',
+      description: hasQuestion ? 'Present' : 'Missing',
+      passed: isLoading ? null : hasQuestion,
+      icon: <HelpCircle className="w-3.5 h-3.5" />
     },
     {
-      id: 'reflection',
-      label: 'Reflection Questions',
-      description: hasReflectionQuestions ? 'Present' : 'Missing',
-      passed: isLoading ? null : hasReflectionQuestions,
-      icon: <MessageSquare className="w-3.5 h-3.5" />
-    },
-    {
-      id: 'action-items',
-      label: 'Action Items',
-      description: hasActionItems ? 'Present' : 'Missing',
-      passed: isLoading ? null : hasActionItems,
+      id: 'anchor-statistic',
+      label: 'Anchor Statistic',
+      description: hasStatistic ? 'Present' : 'Missing',
+      passed: isLoading ? null : hasStatistic,
       icon: <Target className="w-3.5 h-3.5" />
     },
     {
       id: 'structure',
-      label: 'Section Structure',
-      description: `${headingCount} sections (min 8)`,
+      label: 'Subsections',
+      description: `${headingCount} (target: 8-15)`,
       passed: isLoading ? null : hasAdequateStructure,
       icon: <ListChecks className="w-3.5 h-3.5" />
+    },
+    {
+      id: 'conclusion',
+      label: 'Conclusion',
+      description: hasConclusionSec ? 'Present' : 'Missing',
+      passed: isLoading ? null : hasConclusionSec,
+      icon: <BookOpen className="w-3.5 h-3.5" />
+    },
+    {
+      id: 'summary',
+      label: 'Summary',
+      description: `${summaryCount} points (target: 10)`,
+      passed: isLoading ? null : hasSummary,
+      icon: <BookMarked className="w-3.5 h-3.5" />
+    },
+    {
+      id: 'assessment',
+      label: 'Assessment',
+      description: `${assessmentCount} questions (target: 5-7)`,
+      passed: isLoading ? null : hasAssessment,
+      icon: <MessageSquare className="w-3.5 h-3.5" />
+    },
+    {
+      id: 'goals',
+      label: 'Goals',
+      description: `${goalsCount} goals (target: 8-10)`,
+      passed: isLoading ? null : hasGoals,
+      icon: <CheckSquare className="w-3.5 h-3.5" />
+    },
+    {
+      id: 'habits',
+      label: 'Habits',
+      description: hasHabits ? 'Beneficial + Detrimental' : 'Missing sections',
+      passed: isLoading ? null : hasHabits,
+      icon: <Heart className="w-3.5 h-3.5" />
     }
   ];
 
@@ -95,7 +180,7 @@ export function QualityChecklist({ wordCount, content, chapterId }: QualityCheck
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
             <ListChecks className="w-3.5 h-3.5" />
-            Chapter Quality
+            Arootah Standards
           </h3>
           <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
             overallScore >= 80 ? 'bg-green-500/10 text-green-600' :
@@ -107,7 +192,7 @@ export function QualityChecklist({ wordCount, content, chapterId }: QualityCheck
         </div>
       </div>
       
-      <div className="p-3 space-y-2">
+      <div className="p-3 space-y-1.5 max-h-80 overflow-y-auto">
         {checks.map(check => (
           <div 
             key={check.id} 
@@ -115,17 +200,17 @@ export function QualityChecklist({ wordCount, content, chapterId }: QualityCheck
             data-testid={`check-${check.id}`}
           >
             {check.passed === null ? (
-              <AlertCircle className="w-3.5 h-3.5 text-muted-foreground animate-pulse" />
+              <AlertCircle className="w-3.5 h-3.5 text-muted-foreground animate-pulse shrink-0" />
             ) : check.passed ? (
-              <CheckCircle className="w-3.5 h-3.5 text-green-500" />
+              <CheckCircle className="w-3.5 h-3.5 text-green-500 shrink-0" />
             ) : (
-              <XCircle className="w-3.5 h-3.5 text-red-500" />
+              <XCircle className="w-3.5 h-3.5 text-red-500 shrink-0" />
             )}
-            <span className="text-muted-foreground flex items-center gap-1.5">
+            <span className="text-muted-foreground flex items-center gap-1.5 truncate">
               {check.icon}
               {check.label}
             </span>
-            <span className={`ml-auto text-[10px] ${
+            <span className={`ml-auto text-[10px] whitespace-nowrap ${
               check.passed === null ? 'text-muted-foreground' :
               check.passed ? 'text-green-600' : 'text-red-600'
             }`}>
@@ -133,6 +218,12 @@ export function QualityChecklist({ wordCount, content, chapterId }: QualityCheck
             </span>
           </div>
         ))}
+      </div>
+      
+      <div className="p-2 border-t border-border bg-muted/20">
+        <p className="text-[10px] text-muted-foreground text-center">
+          Based on Arootah Principles Book Formula
+        </p>
       </div>
     </div>
   );
