@@ -1,22 +1,48 @@
 import { useEffect, useRef, useState } from "react";
-import { useRoute, Link } from "wouter";
+import { useRoute, Link, useLocation } from "wouter";
 import { ReaderLayout } from "@/components/ReaderLayout";
 import { bookContent } from "@/lib/bookContent";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Sparkles, ArrowRight, MessageSquare, Share2, Bookmark, Brain, User, Loader2 } from "lucide-react";
+import { Sparkles, ArrowRight, MessageSquare, Share2, Bookmark, Brain, User, Loader2, FileText } from "lucide-react";
 import { motion } from "framer-motion";
 import { marked } from "marked";
 
+function generateSlug(text: string): string {
+  return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+}
+
+function configureMarked(): void {
+  marked.use({
+    renderer: {
+      heading(token) {
+        const text = token.text;
+        const depth = token.depth;
+        const slug = generateSlug(text);
+        return `<h${depth} id="${slug}">${text}</h${depth}>`;
+      }
+    }
+  });
+}
+
+function formatWordCount(count: number): string {
+  if (count >= 1000) {
+    return `${(count / 1000).toFixed(1)}k`;
+  }
+  return `${count}`;
+}
+
 export default function Chapter() {
   const [match, params] = useRoute("/chapter/:id");
+  const [location] = useLocation();
   const chapterId = params?.id;
   const chapter = bookContent.find(c => c.id === chapterId);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [fullContent, setFullContent] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [wordCount, setWordCount] = useState<number | null>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -25,6 +51,7 @@ export default function Chapter() {
     
     setLoading(true);
     setFullContent(null);
+    setWordCount(null);
     
     if (chapterId) {
       fetch(`/api/chapters/${chapterId}`)
@@ -33,9 +60,21 @@ export default function Chapter() {
           return res.json();
         })
         .then(data => {
+          configureMarked();
           const htmlContent = marked.parse(data.content, { async: false }) as string;
           setFullContent(htmlContent);
+          setWordCount(data.wordCount || null);
           setLoading(false);
+          
+          setTimeout(() => {
+            const hash = window.location.hash.slice(1);
+            if (hash) {
+              const element = document.getElementById(hash);
+              if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+            }
+          }, 100);
         })
         .catch(() => {
           setFullContent(null);
@@ -65,6 +104,12 @@ export default function Chapter() {
                 </span>
                 {chapter.status === 'in-progress' && (
                     <Badge variant="secondary" className="text-[10px] h-5">Reading</Badge>
+                )}
+                {wordCount && (
+                  <Badge variant="outline" className="text-[10px] h-5 gap-1" data-testid="word-count-badge">
+                    <FileText className="w-3 h-3" />
+                    {formatWordCount(wordCount)} words
+                  </Badge>
                 )}
              </div>
              <div className="flex items-center gap-2">
@@ -113,7 +158,25 @@ export default function Chapter() {
                   </div>
                 ) : (
                   <article 
-                    className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-heading prose-headings:font-semibold prose-p:leading-relaxed prose-img:rounded-xl prose-img:shadow-lg"
+                    className="prose prose-lg dark:prose-invert max-w-none 
+                      prose-headings:font-heading prose-headings:font-semibold prose-headings:scroll-mt-20
+                      prose-h1:text-3xl prose-h1:border-b prose-h1:pb-4 prose-h1:mb-6
+                      prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:text-primary
+                      prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+                      prose-h4:text-lg prose-h4:mt-6 prose-h4:mb-2 prose-h4:text-muted-foreground
+                      prose-p:leading-relaxed prose-p:text-foreground/90
+                      prose-strong:text-foreground prose-strong:font-semibold
+                      prose-em:text-foreground/80
+                      prose-ul:my-4 prose-ul:pl-6
+                      prose-ol:my-4 prose-ol:pl-6
+                      prose-li:my-1 prose-li:marker:text-primary
+                      prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:bg-muted/30 
+                      prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:rounded-r-lg prose-blockquote:not-italic
+                      prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:font-mono
+                      prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-pre:rounded-lg
+                      prose-hr:my-8 prose-hr:border-border
+                      prose-a:text-primary prose-a:underline-offset-4 hover:prose-a:text-primary/80
+                      prose-img:rounded-xl prose-img:shadow-lg"
                     data-testid="chapter-content"
                   >
                      <div dangerouslySetInnerHTML={{ __html: displayContent }} />

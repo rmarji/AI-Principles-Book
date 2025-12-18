@@ -4,6 +4,7 @@ import { cn } from "../lib/utils";
 import { 
   BookOpen, 
   ChevronRight, 
+  ChevronDown,
   Circle, 
   CheckCircle2, 
   Lock, 
@@ -17,17 +18,63 @@ import { ScrollArea } from "./ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { exportToPDF, exportToWord } from "@/lib/exportBook";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+
+interface Subsection {
+  id: string;
+  title: string;
+  level: number;
+}
+
+interface ChapterMeta {
+  id: string;
+  wordCount: number;
+  subsections: Subsection[];
+}
+
+function formatWordCount(count: number): string {
+  if (count >= 1000) {
+    return `${(count / 1000).toFixed(1)}k words`;
+  }
+  return `${count} words`;
+}
 
 export function Sidebar() {
   const [location] = useLocation();
   const [isExporting, setIsExporting] = useState(false);
+  const [chapterMeta, setChapterMeta] = useState<Record<string, ChapterMeta>>({});
+  const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    fetch('/api/chapters')
+      .then(res => res.json())
+      .then(data => {
+        const metaMap: Record<string, ChapterMeta> = {};
+        data.chapters.forEach((ch: ChapterMeta) => {
+          metaMap[ch.id] = ch;
+        });
+        setChapterMeta(metaMap);
+      })
+      .catch(err => console.error('Failed to fetch chapter metadata:', err));
+  }, []);
+
+  useEffect(() => {
+    const match = location.match(/\/chapter\/(.+)/);
+    if (match) {
+      setExpandedChapters(prev => new Set(prev).add(match[1]));
+    }
+  }, [location]);
 
   const handleExportPDF = async () => {
     setIsExporting(true);
@@ -51,6 +98,25 @@ export function Sidebar() {
     }
   };
 
+  const toggleChapter = (chapterId: string) => {
+    setExpandedChapters(prev => {
+      const next = new Set(prev);
+      if (next.has(chapterId)) {
+        next.delete(chapterId);
+      } else {
+        next.add(chapterId);
+      }
+      return next;
+    });
+  };
+
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
     <div className="w-80 h-screen border-r bg-sidebar flex flex-col shrink-0">
       <div className="p-6 border-b border-sidebar-border">
@@ -71,7 +137,7 @@ export function Sidebar() {
                 location === "/" 
                   ? "bg-sidebar-accent text-sidebar-accent-foreground" 
                   : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground"
-              )}>
+              )} data-testid="link-cover">
                 <LayoutTemplate size={16} />
                 Cover & Overview
               </Link>
@@ -82,11 +148,14 @@ export function Sidebar() {
               Chapters
             </div>
             <nav className="space-y-1">
-              {bookContent.map((chapter, index) => {
+              {bookContent.map((chapter) => {
                 if (chapter.id === 'overview') return null;
                 
                 const isActive = location === `/chapter/${chapter.id}`;
                 const isLocked = chapter.status === 'locked';
+                const meta = chapterMeta[chapter.id];
+                const isExpanded = expandedChapters.has(chapter.id);
+                const hasSubsections = meta?.subsections && meta.subsections.length > 0;
 
                 if (isLocked) {
                     return (
@@ -107,34 +176,84 @@ export function Sidebar() {
                 }
 
                 return (
-                  <Link key={chapter.id} href={`/chapter/${chapter.id}`} className={cn(
-                      "group flex items-start gap-3 px-3 py-3 text-sm rounded-md transition-all relative",
-                      isActive 
-                        ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm" 
-                        : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground"
-                    )}>
-                      <div className="mt-0.5 shrink-0">
-                        {chapter.status === 'completed' ? (
-                          <CheckCircle2 size={16} className="text-primary" />
-                        ) : (
-                          <div className={cn(
-                            "w-4 h-4 rounded-full border-2 flex items-center justify-center",
-                            isActive ? "border-primary" : "border-muted-foreground/30"
-                          )}>
-                            {isActive && <div className="w-1.5 h-1.5 rounded-full bg-primary" />}
+                  <Collapsible key={chapter.id} open={isExpanded} onOpenChange={() => toggleChapter(chapter.id)}>
+                    <div className="relative">
+                      <Link href={`/chapter/${chapter.id}`} className={cn(
+                          "group flex items-start gap-3 px-3 py-3 text-sm rounded-md transition-all relative",
+                          isActive 
+                            ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm" 
+                            : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground"
+                        )} data-testid={`link-chapter-${chapter.id}`}>
+                          <div className="mt-0.5 shrink-0">
+                            {chapter.status === 'completed' ? (
+                              <CheckCircle2 size={16} className="text-primary" />
+                            ) : (
+                              <div className={cn(
+                                "w-4 h-4 rounded-full border-2 flex items-center justify-center",
+                                isActive ? "border-primary" : "border-muted-foreground/30"
+                              )}>
+                                {isActive && <div className="w-1.5 h-1.5 rounded-full bg-primary" />}
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <span className="block font-medium leading-none mb-1">{chapter.title}</span>
-                        <span className="text-xs text-muted-foreground line-clamp-1 group-hover:text-foreground/80 transition-colors">
-                          {chapter.subtitle}
-                        </span>
-                      </div>
-                      {isActive && (
-                        <ChevronRight size={14} className="mt-0.5 text-primary opacity-100" />
+                          <div className="flex-1 min-w-0">
+                            <span className="block font-medium leading-none mb-1">{chapter.title}</span>
+                            <span className="text-xs text-muted-foreground line-clamp-1 group-hover:text-foreground/80 transition-colors">
+                              {chapter.subtitle}
+                            </span>
+                            {meta?.wordCount && (
+                              <span className="text-[10px] text-muted-foreground/70 mt-1 block">
+                                {formatWordCount(meta.wordCount)}
+                              </span>
+                            )}
+                          </div>
+                      </Link>
+                      
+                      {hasSubsections && (
+                        <CollapsibleTrigger asChild>
+                          <button 
+                            className={cn(
+                              "absolute right-2 top-3 p-1 rounded hover:bg-sidebar-accent/50 transition-colors",
+                              isActive ? "text-primary" : "text-muted-foreground"
+                            )}
+                            data-testid={`toggle-chapter-${chapter.id}`}
+                          >
+                            {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                          </button>
+                        </CollapsibleTrigger>
                       )}
-                  </Link>
+                    </div>
+                    
+                    {hasSubsections && (
+                      <CollapsibleContent>
+                        <div className="ml-7 pl-3 border-l border-border/50 space-y-0.5 py-1">
+                          {meta.subsections
+                            .filter(sub => sub.level === 2 || sub.level === 3)
+                            .slice(0, 15)
+                            .map((sub, idx) => (
+                              <Link 
+                                key={`${sub.id}-${idx}`}
+                                href={`/chapter/${chapter.id}#${sub.id}`}
+                                onClick={(e) => {
+                                  if (isActive) {
+                                    e.preventDefault();
+                                    scrollToSection(sub.id);
+                                  }
+                                }}
+                                className={cn(
+                                  "block text-xs py-1.5 px-2 rounded transition-colors truncate",
+                                  sub.level === 3 ? "ml-2 text-muted-foreground/80" : "text-muted-foreground",
+                                  "hover:bg-sidebar-accent/30 hover:text-foreground"
+                                )}
+                                data-testid={`link-section-${sub.id}`}
+                              >
+                                {sub.title}
+                              </Link>
+                            ))}
+                        </div>
+                      </CollapsibleContent>
+                    )}
+                  </Collapsible>
                 );
               })}
             </nav>
@@ -151,17 +270,18 @@ export function Sidebar() {
                   variant="outline" 
                   className="w-full justify-start gap-2 h-9"
                   disabled={isExporting}
+                  data-testid="button-export"
                 >
                   <FileDown size={16} />
                   {isExporting ? 'Exporting...' : 'Download Book'}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={handleExportPDF} className="gap-2 cursor-pointer">
+                <DropdownMenuItem onClick={handleExportPDF} className="gap-2 cursor-pointer" data-testid="button-export-pdf">
                   <FileText size={16} />
                   Export as PDF
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleExportWord} className="gap-2 cursor-pointer">
+                <DropdownMenuItem onClick={handleExportWord} className="gap-2 cursor-pointer" data-testid="button-export-word">
                   <FileText size={16} />
                   Export as Word
                 </DropdownMenuItem>
