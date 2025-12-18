@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRoute, Link } from "wouter";
 import { ReaderLayout } from "@/components/ReaderLayout";
 import { bookContent } from "@/lib/bookContent";
@@ -6,26 +6,50 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Sparkles, ArrowRight, MessageSquare, Share2, Bookmark, Brain, User } from "lucide-react";
+import { Sparkles, ArrowRight, MessageSquare, Share2, Bookmark, Brain, User, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { marked } from "marked";
 
 export default function Chapter() {
   const [match, params] = useRoute("/chapter/:id");
   const chapterId = params?.id;
   const chapter = bookContent.find(c => c.id === chapterId);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [fullContent, setFullContent] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Scroll to top when chapter changes
     if (scrollRef.current) {
-        scrollRef.current.scrollTop = 0;
+      scrollRef.current.scrollTop = 0;
+    }
+    
+    setLoading(true);
+    setFullContent(null);
+    
+    if (chapterId) {
+      fetch(`/api/chapters/${chapterId}`)
+        .then(res => {
+          if (!res.ok) throw new Error('Chapter not found');
+          return res.json();
+        })
+        .then(data => {
+          const htmlContent = marked.parse(data.content, { async: false }) as string;
+          setFullContent(htmlContent);
+          setLoading(false);
+        })
+        .catch(() => {
+          setFullContent(null);
+          setLoading(false);
+        });
     }
   }, [chapterId]);
 
-  if (!chapter) return <div>Chapter not found</div>;
+  if (!chapter) return <div className="flex items-center justify-center h-screen">Chapter not found</div>;
 
   const nextChapterIndex = bookContent.findIndex(c => c.id === chapterId) + 1;
   const nextChapter = bookContent[nextChapterIndex];
+
+  const displayContent = fullContent || chapter.content;
 
   return (
     <ReaderLayout>
@@ -44,13 +68,13 @@ export default function Chapter() {
                 )}
              </div>
              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Button variant="ghost" size="icon" className="h-8 w-8" data-testid="button-bookmark">
                     <Bookmark className="w-4 h-4" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Button variant="ghost" size="icon" className="h-8 w-8" data-testid="button-share">
                     <Share2 className="w-4 h-4" />
                 </Button>
-                <Button variant="outline" size="sm" className="gap-2 ml-2 h-8 text-xs">
+                <Button variant="outline" size="sm" className="gap-2 ml-2 h-8 text-xs" data-testid="button-ai-assistant">
                     <Sparkles className="w-3 h-3 text-primary" />
                     Ask AI Assistant
                 </Button>
@@ -82,9 +106,19 @@ export default function Chapter() {
                   ))}
                 </div>
 
-                <article className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-heading prose-headings:font-semibold prose-p:leading-relaxed prose-img:rounded-xl prose-img:shadow-lg">
-                   <div dangerouslySetInnerHTML={{ __html: chapter.content }} />
-                </article>
+                {loading ? (
+                  <div className="flex items-center justify-center py-20">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                    <span className="ml-3 text-muted-foreground">Loading chapter content...</span>
+                  </div>
+                ) : (
+                  <article 
+                    className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-heading prose-headings:font-semibold prose-p:leading-relaxed prose-img:rounded-xl prose-img:shadow-lg"
+                    data-testid="chapter-content"
+                  >
+                     <div dangerouslySetInnerHTML={{ __html: displayContent }} />
+                  </article>
+                )}
 
                 <Separator className="my-12" />
 
@@ -95,7 +129,7 @@ export default function Chapter() {
                     </h3>
                     <ul className="grid gap-3">
                         {chapter.topics.map((topic, i) => (
-                            <li key={i} className="flex items-start gap-3 text-sm text-muted-foreground">
+                            <li key={i} className="flex items-start gap-3 text-sm text-muted-foreground" data-testid={`takeaway-${i}`}>
                                 <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
                                 {topic}
                             </li>
@@ -105,7 +139,7 @@ export default function Chapter() {
 
                 {nextChapter && (
                     <div className="mt-16 flex justify-end">
-                         <Link href={`/chapter/${nextChapter.id}`} className="group block text-right">
+                         <Link href={`/chapter/${nextChapter.id}`} className="group block text-right" data-testid="link-next-chapter">
                             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider block mb-1">Up Next</span>
                             <div className="flex items-center justify-end gap-2 text-xl font-heading font-bold text-foreground group-hover:text-primary transition-colors">
                                 {nextChapter.title}: {nextChapter.subtitle}
@@ -119,8 +153,7 @@ export default function Chapter() {
           </div>
         </div>
 
-        {/* AI Assistant Context Panel - Optional/Collapsible */}
-        {/* For now, just a placeholder sidebar on the right for large screens */}
+        {/* AI Assistant Context Panel */}
         <div className="hidden xl:flex w-80 border-l border-border bg-background flex-col shrink-0">
             <div className="p-4 border-b border-border font-medium flex items-center gap-2 text-sm">
                 <MessageSquare className="w-4 h-4 text-primary" />
@@ -163,8 +196,9 @@ export default function Chapter() {
                         type="text" 
                         placeholder="Ask about this chapter..." 
                         className="w-full bg-muted/50 border border-input rounded-md pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                        data-testid="input-ai-question"
                     />
-                    <button className="absolute right-2 top-2 text-muted-foreground hover:text-primary">
+                    <button className="absolute right-2 top-2 text-muted-foreground hover:text-primary" data-testid="button-send-question">
                         <ArrowRight className="w-4 h-4" />
                     </button>
                 </div>

@@ -3,14 +3,12 @@ import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } fro
 import { saveAs } from 'file-saver';
 import { bookContent } from './bookContent';
 
-// Helper to strip HTML tags for plain text export
 function stripHtml(html: string): string {
   const temp = document.createElement('div');
   temp.innerHTML = html;
   return temp.textContent || temp.innerText || '';
 }
 
-// Helper to convert HTML to structured text with formatting info
 function parseHtmlToSections(html: string): { type: string; text: string; level?: number }[] {
   const temp = document.createElement('div');
   temp.innerHTML = html;
@@ -26,7 +24,9 @@ function parseHtmlToSections(html: string): { type: string; text: string; level?
       const element = node as HTMLElement;
       const tagName = element.tagName.toLowerCase();
 
-      if (tagName === 'h2') {
+      if (tagName === 'h1') {
+        sections.push({ type: 'heading', text: element.textContent || '', level: 1 });
+      } else if (tagName === 'h2') {
         sections.push({ type: 'heading', text: element.textContent || '', level: 2 });
       } else if (tagName === 'h3') {
         sections.push({ type: 'heading', text: element.textContent || '', level: 3 });
@@ -38,8 +38,9 @@ function parseHtmlToSections(html: string): { type: string; text: string; level?
         sections.push({ type: 'listItem', text: element.textContent || '' });
       } else if (tagName === 'strong' || tagName === 'em') {
         sections.push({ type: 'text', text: element.textContent || '' });
+      } else if (tagName === 'hr') {
+        sections.push({ type: 'separator', text: '---' });
       } else {
-        // Traverse children for other elements
         Array.from(element.childNodes).forEach(traverse);
       }
     }
@@ -47,6 +48,20 @@ function parseHtmlToSections(html: string): { type: string; text: string; level?
 
   Array.from(temp.childNodes).forEach(traverse);
   return sections;
+}
+
+async function fetchChapterContent(chapterId: string): Promise<string> {
+  try {
+    const response = await fetch(`/api/chapters/${chapterId}`);
+    if (!response.ok) {
+      throw new Error('Chapter not found');
+    }
+    const data = await response.json();
+    return data.content || '';
+  } catch (error) {
+    console.error(`Error fetching chapter ${chapterId}:`, error);
+    return '';
+  }
 }
 
 export async function exportToPDF() {
@@ -62,7 +77,6 @@ export async function exportToPDF() {
   const margin = 20;
   const maxWidth = pageWidth - 2 * margin;
 
-  // Title Page
   pdf.setFontSize(24);
   pdf.setFont('helvetica', 'bold');
   pdf.text("The Leader's Guide to AI Teams", pageWidth / 2, 60, { align: 'center' });
@@ -76,29 +90,30 @@ export async function exportToPDF() {
   pdf.text('By Rayo Marji', pageWidth / 2, 110, { align: 'center' });
   pdf.text('CTO, Arootah', pageWidth / 2, 120, { align: 'center' });
 
-  // Add chapters
-  bookContent.forEach((chapter, index) => {
+  for (const chapter of bookContent) {
     pdf.addPage();
     yPosition = 20;
 
-    // Chapter title
+    const title = chapter.subtitle ? `${chapter.title}: ${chapter.subtitle}` : chapter.title;
     pdf.setFontSize(18);
     pdf.setFont('helvetica', 'bold');
-    const title = chapter.subtitle ? `${chapter.title}: ${chapter.subtitle}` : chapter.title;
     pdf.text(title, margin, yPosition);
     yPosition += 15;
 
-    // Chapter description
     pdf.setFontSize(11);
     pdf.setFont('helvetica', 'italic');
     const descLines = pdf.splitTextToSize(chapter.description, maxWidth);
     pdf.text(descLines, margin, yPosition);
     yPosition += descLines.length * 7 + 10;
 
-    // Chapter content (simplified)
+    let content = await fetchChapterContent(chapter.id);
+    if (!content) {
+      content = chapter.content;
+    }
+
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(10);
-    const contentText = stripHtml(chapter.content);
+    const contentText = stripHtml(content);
     const lines = pdf.splitTextToSize(contentText, maxWidth);
 
     lines.forEach((line: string) => {
@@ -109,7 +124,7 @@ export async function exportToPDF() {
       pdf.text(line, margin, yPosition);
       yPosition += 6;
     });
-  });
+  }
 
   pdf.save('AI-Leadership-Guide.pdf');
 }
@@ -117,7 +132,6 @@ export async function exportToPDF() {
 export async function exportToWord() {
   const sections: any[] = [];
 
-  // Title Page
   sections.push(
     new Paragraph({
       text: "The Leader's Guide to AI Teams",
@@ -162,9 +176,7 @@ export async function exportToWord() {
     })
   );
 
-  // Add each chapter
-  bookContent.forEach((chapter) => {
-    // Chapter title
+  for (const chapter of bookContent) {
     const title = chapter.subtitle ? `${chapter.title}: ${chapter.subtitle}` : chapter.title;
     sections.push(
       new Paragraph({
@@ -174,7 +186,6 @@ export async function exportToWord() {
       })
     );
 
-    // Description
     sections.push(
       new Paragraph({
         children: [
@@ -187,11 +198,16 @@ export async function exportToWord() {
       })
     );
 
-    // Content
-    const contentSections = parseHtmlToSections(chapter.content);
+    let content = await fetchChapterContent(chapter.id);
+    if (!content) {
+      content = chapter.content;
+    }
+
+    const contentSections = parseHtmlToSections(content);
     contentSections.forEach((section) => {
       if (section.type === 'heading') {
-        const headingLevel = section.level === 2 ? HeadingLevel.HEADING_2 : 
+        const headingLevel = section.level === 1 ? HeadingLevel.HEADING_1 :
+                            section.level === 2 ? HeadingLevel.HEADING_2 : 
                             section.level === 3 ? HeadingLevel.HEADING_3 : 
                             HeadingLevel.HEADING_4;
         sections.push(
@@ -216,6 +232,13 @@ export async function exportToWord() {
             spacing: { after: 100 },
           })
         );
+      } else if (section.type === 'separator') {
+        sections.push(
+          new Paragraph({
+            text: '',
+            spacing: { before: 200, after: 200 },
+          })
+        );
       } else if (section.type === 'text' && section.text) {
         sections.push(
           new Paragraph({
@@ -226,14 +249,13 @@ export async function exportToWord() {
       }
     });
 
-    // Page break after each chapter
     sections.push(
       new Paragraph({
         text: '',
         pageBreakBefore: true,
       })
     );
-  });
+  }
 
   const doc = new Document({
     sections: [
