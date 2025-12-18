@@ -35,11 +35,12 @@ export default function Home() {
               </p>
               
               <div className="flex flex-wrap gap-4 pt-4">
-                <Link href="/chapter/chapter-1">
-                  <Button size="lg" className="h-12 px-8 text-base shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 cursor-pointer">
+                <Button asChild size="lg" className="h-12 px-8 text-base shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 cursor-pointer">
+                  <Link href="/chapter/chapter-1">
                     Start Reading <ArrowRight className="ml-2 w-4 h-4" />
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
+                
                 <Button variant="outline" size="lg" className="h-12 px-8 text-base border-primary/20 hover:bg-primary/5 hover:text-primary cursor-pointer">
                   See the Roles
                 </Button>
