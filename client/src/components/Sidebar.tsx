@@ -8,9 +8,11 @@ import {
   CheckCircle2, 
   Lock, 
   BrainCircuit,
-  LayoutTemplate
+  LayoutTemplate,
+  User
 } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function Sidebar() {
   const [location] = useLocation();
@@ -52,7 +54,6 @@ export function Sidebar() {
                 const isActive = location === `/chapter/${chapter.id}`;
                 const isLocked = chapter.status === 'locked';
 
-                // For locked chapters, we render a div instead of a Link to avoid navigation
                 if (isLocked) {
                     return (
                         <div key={chapter.id} className={cn(
@@ -109,12 +110,13 @@ export function Sidebar() {
 
       <div className="p-4 border-t border-sidebar-border bg-sidebar-accent/10">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-indigo-500 flex items-center justify-center text-white text-xs font-bold">
-            JD
-          </div>
+          <Avatar className="h-9 w-9 border border-primary/20">
+            <AvatarImage src="/placeholder-avatar.png" />
+            <AvatarFallback className="bg-primary text-primary-foreground font-bold">RM</AvatarFallback>
+          </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">John Doe</p>
-            <p className="text-xs text-muted-foreground truncate">CEO & Founder</p>
+            <p className="text-sm font-medium truncate">Rayo Marji</p>
+            <p className="text-xs text-muted-foreground truncate">CTO, Arootah</p>
           </div>
         </div>
       </div>

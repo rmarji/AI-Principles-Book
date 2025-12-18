@@ -18,9 +18,15 @@ export default function Home() {
           
           <div className="grid md:grid-cols-2 gap-12 items-center mb-16">
             <div className="space-y-6">
-              <Badge variant="outline" className="px-3 py-1 text-primary border-primary/20 bg-primary/5 rounded-full text-xs font-medium tracking-wider uppercase">
-                Interactive Guide
-              </Badge>
+              <div className="flex items-center gap-2">
+                 <Badge variant="outline" className="px-3 py-1 text-primary border-primary/20 bg-primary/5 rounded-full text-xs font-medium tracking-wider uppercase">
+                  Interactive Guide
+                </Badge>
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  By Rayo Marji, CTO Arootah
+                </span>
+              </div>
+              
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold leading-[1.1] tracking-tight text-foreground">
                 The Leader's Guide to <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-400">AI Teams</span>
               </h1>
@@ -48,6 +54,10 @@ export default function Home() {
                   alt="Book Cover" 
                   className="w-full h-full object-cover transform transition-transform duration-700 hover:scale-105"
                  />
+                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6 text-white">
+                    <p className="text-sm font-medium uppercase tracking-widest opacity-80 mb-1">Arootah</p>
+                    <p className="font-heading font-bold text-lg">Rayo Marji</p>
+                 </div>
               </div>
             </div>
           </div>
