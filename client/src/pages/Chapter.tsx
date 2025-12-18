@@ -4,11 +4,12 @@ import { ReaderLayout } from "@/components/ReaderLayout";
 import { bookContent } from "@/lib/bookContent";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Sparkles, ArrowRight, MessageSquare, Share2, Bookmark, Brain, User, Loader2, FileText } from "lucide-react";
+import { Sparkles, ArrowRight, MessageSquare, Share2, Bookmark, Brain, Loader2, FileText } from "lucide-react";
 import { motion } from "framer-motion";
 import { marked } from "marked";
+import { QualityChecklist } from "@/components/QualityChecklist";
+import { AIDiscussion } from "@/components/AIDiscussion";
 
 function generateSlug(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -41,6 +42,7 @@ export default function Chapter() {
   const chapter = bookContent.find(c => c.id === chapterId);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [fullContent, setFullContent] = useState<string | null>(null);
+  const [rawContent, setRawContent] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [wordCount, setWordCount] = useState<number | null>(null);
 
@@ -51,6 +53,7 @@ export default function Chapter() {
     
     setLoading(true);
     setFullContent(null);
+    setRawContent(null);
     setWordCount(null);
     
     if (chapterId) {
@@ -63,6 +66,7 @@ export default function Chapter() {
           configureMarked();
           const htmlContent = marked.parse(data.content, { async: false }) as string;
           setFullContent(htmlContent);
+          setRawContent(data.content);
           setWordCount(data.wordCount || null);
           setLoading(false);
           
@@ -159,24 +163,27 @@ export default function Chapter() {
                 ) : (
                   <article 
                     className="prose prose-lg dark:prose-invert max-w-none 
-                      prose-headings:font-heading prose-headings:font-semibold prose-headings:scroll-mt-20
-                      prose-h1:text-3xl prose-h1:border-b prose-h1:pb-4 prose-h1:mb-6
-                      prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:text-primary
-                      prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
-                      prose-h4:text-lg prose-h4:mt-6 prose-h4:mb-2 prose-h4:text-muted-foreground
-                      prose-p:leading-relaxed prose-p:text-foreground/90
+                      prose-headings:font-heading prose-headings:font-semibold prose-headings:scroll-mt-24
+                      prose-h1:text-3xl prose-h1:border-b-2 prose-h1:border-primary/20 prose-h1:pb-4 prose-h1:mb-8
+                      prose-h2:text-2xl prose-h2:mt-16 prose-h2:mb-6 prose-h2:text-primary prose-h2:border-b prose-h2:border-border prose-h2:pb-3
+                      prose-h3:text-xl prose-h3:mt-10 prose-h3:mb-4 prose-h3:text-foreground/90 prose-h3:pl-4 prose-h3:border-l-4 prose-h3:border-primary/40
+                      prose-h4:text-lg prose-h4:mt-8 prose-h4:mb-3 prose-h4:text-muted-foreground prose-h4:font-medium
+                      prose-p:leading-relaxed prose-p:text-foreground/85 prose-p:mb-5
                       prose-strong:text-foreground prose-strong:font-semibold
                       prose-em:text-foreground/80
-                      prose-ul:my-4 prose-ul:pl-6
-                      prose-ol:my-4 prose-ol:pl-6
-                      prose-li:my-1 prose-li:marker:text-primary
-                      prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:bg-muted/30 
-                      prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:rounded-r-lg prose-blockquote:not-italic
+                      prose-ul:my-6 prose-ul:pl-6 prose-ul:space-y-2
+                      prose-ol:my-6 prose-ol:pl-6 prose-ol:space-y-2
+                      prose-li:my-1 prose-li:marker:text-primary prose-li:leading-relaxed
+                      prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:bg-primary/5 
+                      prose-blockquote:py-4 prose-blockquote:px-6 prose-blockquote:rounded-r-xl prose-blockquote:not-italic prose-blockquote:my-8 prose-blockquote:shadow-sm
                       prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:font-mono
-                      prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-pre:rounded-lg
-                      prose-hr:my-8 prose-hr:border-border
+                      prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-pre:rounded-lg prose-pre:my-6
+                      prose-hr:my-12 prose-hr:border-border prose-hr:border-t-2
                       prose-a:text-primary prose-a:underline-offset-4 hover:prose-a:text-primary/80
-                      prose-img:rounded-xl prose-img:shadow-lg"
+                      prose-img:rounded-xl prose-img:shadow-lg
+                      [&>h2]:first-of-type:mt-0
+                      [&>h2+p]:mt-0 [&>h2+p]:text-muted-foreground
+                      [&>h3+p]:mt-0"
                     data-testid="chapter-content"
                   >
                      <div dangerouslySetInnerHTML={{ __html: displayContent }} />
@@ -218,54 +225,25 @@ export default function Chapter() {
 
         {/* AI Assistant Context Panel */}
         <div className="hidden xl:flex w-80 border-l border-border bg-background flex-col shrink-0">
-            <div className="p-4 border-b border-border font-medium flex items-center gap-2 text-sm">
+            {/* Quality Checklist */}
+            <QualityChecklist 
+              wordCount={wordCount} 
+              content={rawContent}
+              chapterId={chapterId || ''}
+            />
+            
+            {/* AI Discussion Header */}
+            <div className="p-3 border-b border-border font-medium flex items-center gap-2 text-sm">
                 <MessageSquare className="w-4 h-4 text-primary" />
                 AI Discussion
             </div>
-            <ScrollArea className="flex-1 p-4">
-                <div className="space-y-4">
-                    <div className="flex gap-3">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                            <Sparkles className="w-4 h-4 text-primary" />
-                        </div>
-                        <div className="bg-muted/50 p-3 rounded-lg rounded-tl-none text-sm text-muted-foreground">
-                            I've analyzed this chapter. The key concept here is distinguishing between "Tools" and "Agents". Would you like me to generate a quiz on this?
-                        </div>
-                    </div>
-                     <div className="flex gap-3 flex-row-reverse">
-                        <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center shrink-0">
-                            <User className="w-4 h-4" />
-                        </div>
-                        <div className="bg-primary/10 p-3 rounded-lg rounded-tr-none text-sm">
-                           Yes, give me 3 questions to test my understanding.
-                        </div>
-                    </div>
-                     <div className="flex gap-3">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                            <Sparkles className="w-4 h-4 text-primary" />
-                        </div>
-                        <div className="bg-muted/50 p-3 rounded-lg rounded-tl-none text-sm text-muted-foreground">
-                            Here are 3 questions:<br/><br/>
-                            1. What is the primary difference between an AI tool and an AI agent?<br/>
-                            2. Name one example of a task suited for an Agent vs a Tool.<br/>
-                            3. What is "Agentic AI"?
-                        </div>
-                    </div>
-                </div>
-            </ScrollArea>
-             <div className="p-4 border-t border-border">
-                <div className="relative">
-                    <input 
-                        type="text" 
-                        placeholder="Ask about this chapter..." 
-                        className="w-full bg-muted/50 border border-input rounded-md pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                        data-testid="input-ai-question"
-                    />
-                    <button className="absolute right-2 top-2 text-muted-foreground hover:text-primary" data-testid="button-send-question">
-                        <ArrowRight className="w-4 h-4" />
-                    </button>
-                </div>
-            </div>
+            
+            {/* AI Discussion Component */}
+            <AIDiscussion 
+              chapterId={chapterId || ''}
+              chapterTitle={chapter?.subtitle || chapter?.title || ''}
+              chapterContent={rawContent}
+            />
         </div>
       </div>
     </ReaderLayout>

@@ -9,44 +9,78 @@ function stripHtml(html: string): string {
   return temp.textContent || temp.innerText || '';
 }
 
-function parseHtmlToSections(html: string): { type: string; text: string; level?: number }[] {
-  const temp = document.createElement('div');
-  temp.innerHTML = html;
+function parseMarkdownToSections(markdown: string): { type: string; text: string; level?: number }[] {
   const sections: { type: string; text: string; level?: number }[] = [];
+  const lines = markdown.split('\n');
+  let currentParagraph: string[] = [];
+  let inList = false;
 
-  function traverse(node: Node) {
-    if (node.nodeType === Node.TEXT_NODE) {
-      const text = node.textContent?.trim();
+  function flushParagraph() {
+    if (currentParagraph.length > 0) {
+      const text = currentParagraph.join(' ').trim();
       if (text) {
-        sections.push({ type: 'text', text });
+        sections.push({ type: 'paragraph', text });
       }
-    } else if (node.nodeType === Node.ELEMENT_NODE) {
-      const element = node as HTMLElement;
-      const tagName = element.tagName.toLowerCase();
-
-      if (tagName === 'h1') {
-        sections.push({ type: 'heading', text: element.textContent || '', level: 1 });
-      } else if (tagName === 'h2') {
-        sections.push({ type: 'heading', text: element.textContent || '', level: 2 });
-      } else if (tagName === 'h3') {
-        sections.push({ type: 'heading', text: element.textContent || '', level: 3 });
-      } else if (tagName === 'h4') {
-        sections.push({ type: 'heading', text: element.textContent || '', level: 4 });
-      } else if (tagName === 'p') {
-        sections.push({ type: 'paragraph', text: element.textContent || '' });
-      } else if (tagName === 'li') {
-        sections.push({ type: 'listItem', text: element.textContent || '' });
-      } else if (tagName === 'strong' || tagName === 'em') {
-        sections.push({ type: 'text', text: element.textContent || '' });
-      } else if (tagName === 'hr') {
-        sections.push({ type: 'separator', text: '---' });
-      } else {
-        Array.from(element.childNodes).forEach(traverse);
-      }
+      currentParagraph = [];
     }
   }
 
-  Array.from(temp.childNodes).forEach(traverse);
+  for (const line of lines) {
+    const trimmedLine = line.trim();
+
+    if (trimmedLine.startsWith('# ')) {
+      flushParagraph();
+      sections.push({ type: 'heading', text: trimmedLine.slice(2).trim(), level: 1 });
+    } else if (trimmedLine.startsWith('## ')) {
+      flushParagraph();
+      sections.push({ type: 'heading', text: trimmedLine.slice(3).trim(), level: 2 });
+    } else if (trimmedLine.startsWith('### ')) {
+      flushParagraph();
+      sections.push({ type: 'heading', text: trimmedLine.slice(4).trim(), level: 3 });
+    } else if (trimmedLine.startsWith('#### ')) {
+      flushParagraph();
+      sections.push({ type: 'heading', text: trimmedLine.slice(5).trim(), level: 4 });
+    } else if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('* ')) {
+      flushParagraph();
+      inList = true;
+      const text = trimmedLine.slice(2).trim()
+        .replace(/\*\*(.+?)\*\*/g, '$1')
+        .replace(/\*(.+?)\*/g, '$1')
+        .replace(/_(.+?)_/g, '$1');
+      sections.push({ type: 'listItem', text });
+    } else if (/^\d+\.\s/.test(trimmedLine)) {
+      flushParagraph();
+      inList = true;
+      const text = trimmedLine.replace(/^\d+\.\s/, '').trim()
+        .replace(/\*\*(.+?)\*\*/g, '$1')
+        .replace(/\*(.+?)\*/g, '$1')
+        .replace(/_(.+?)_/g, '$1');
+      sections.push({ type: 'listItem', text });
+    } else if (trimmedLine === '---' || trimmedLine === '***') {
+      flushParagraph();
+      sections.push({ type: 'separator', text: '' });
+    } else if (trimmedLine.startsWith('> ')) {
+      flushParagraph();
+      const text = trimmedLine.slice(2).trim()
+        .replace(/\*\*(.+?)\*\*/g, '$1')
+        .replace(/\*(.+?)\*/g, '$1');
+      sections.push({ type: 'blockquote', text });
+    } else if (trimmedLine === '') {
+      if (inList) {
+        inList = false;
+      }
+      flushParagraph();
+    } else {
+      const cleanText = trimmedLine
+        .replace(/\*\*(.+?)\*\*/g, '$1')
+        .replace(/\*(.+?)\*/g, '$1')
+        .replace(/_(.+?)_/g, '$1')
+        .replace(/`(.+?)`/g, '$1');
+      currentParagraph.push(cleanText);
+    }
+  }
+
+  flushParagraph();
   return sections;
 }
 
@@ -203,7 +237,7 @@ export async function exportToWord() {
       content = chapter.content;
     }
 
-    const contentSections = parseHtmlToSections(content);
+    const contentSections = parseMarkdownToSections(content);
     contentSections.forEach((section) => {
       if (section.type === 'heading') {
         const headingLevel = section.level === 1 ? HeadingLevel.HEADING_1 :
@@ -214,14 +248,14 @@ export async function exportToWord() {
           new Paragraph({
             text: section.text,
             heading: headingLevel,
-            spacing: { before: 200, after: 100 },
+            spacing: { before: 300, after: 150 },
           })
         );
       } else if (section.type === 'paragraph') {
         sections.push(
           new Paragraph({
             text: section.text,
-            spacing: { after: 150 },
+            spacing: { after: 200 },
           })
         );
       } else if (section.type === 'listItem') {
@@ -229,14 +263,28 @@ export async function exportToWord() {
           new Paragraph({
             text: section.text,
             bullet: { level: 0 },
-            spacing: { after: 100 },
+            spacing: { after: 80 },
+          })
+        );
+      } else if (section.type === 'blockquote') {
+        sections.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: section.text,
+                italics: true,
+              }),
+            ],
+            indent: { left: 720 },
+            spacing: { before: 200, after: 200 },
           })
         );
       } else if (section.type === 'separator') {
         sections.push(
           new Paragraph({
-            text: '',
-            spacing: { before: 200, after: 200 },
+            text: '_______________________________________________',
+            alignment: AlignmentType.CENTER,
+            spacing: { before: 300, after: 300 },
           })
         );
       } else if (section.type === 'text' && section.text) {
