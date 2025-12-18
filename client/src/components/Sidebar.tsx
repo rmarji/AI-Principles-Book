@@ -9,13 +9,47 @@ import {
   Lock, 
   BrainCircuit,
   LayoutTemplate,
-  User
+  User,
+  FileDown,
+  FileText
 } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { exportToPDF, exportToWord } from "@/lib/exportBook";
+import { useState } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function Sidebar() {
   const [location] = useLocation();
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExportPDF = async () => {
+    setIsExporting(true);
+    try {
+      await exportToPDF();
+    } catch (error) {
+      console.error('Export to PDF failed:', error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleExportWord = async () => {
+    setIsExporting(true);
+    try {
+      await exportToWord();
+    } catch (error) {
+      console.error('Export to Word failed:', error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <div className="w-80 h-screen border-r bg-sidebar flex flex-col shrink-0">
@@ -104,6 +138,35 @@ export function Sidebar() {
                 );
               })}
             </nav>
+          </div>
+
+          {/* Export Section */}
+          <div className="space-y-2">
+            <div className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Export
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start gap-2 h-9"
+                  disabled={isExporting}
+                >
+                  <FileDown size={16} />
+                  {isExporting ? 'Exporting...' : 'Download Book'}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={handleExportPDF} className="gap-2 cursor-pointer">
+                  <FileText size={16} />
+                  Export as PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportWord} className="gap-2 cursor-pointer">
+                  <FileText size={16} />
+                  Export as Word
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </ScrollArea>
