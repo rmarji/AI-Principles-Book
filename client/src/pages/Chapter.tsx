@@ -10,6 +10,7 @@ import { motion } from "framer-motion";
 import { marked } from "marked";
 import { QualityChecklist } from "@/components/QualityChecklist";
 import { AIDiscussion } from "@/components/AIDiscussion";
+import { CritiquePanel } from "@/components/CritiquePanel";
 
 function generateSlug(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -203,7 +204,7 @@ export default function Chapter() {
         </div>
 
         {/* AI Assistant Context Panel */}
-        <div className="hidden xl:flex w-80 border-l border-border bg-background flex-col shrink-0">
+        <div className="hidden xl:flex w-96 border-l border-border bg-background flex-col shrink-0">
             {/* Quality Checklist */}
             <QualityChecklist 
               wordCount={wordCount} 
@@ -211,8 +212,41 @@ export default function Chapter() {
               chapterId={chapterId || ''}
             />
             
+            {/* Critique Panel */}
+            <div className="flex-1 min-h-0 border-b border-border">
+              <CritiquePanel 
+                chapterId={chapterId || ''}
+                onNavigateToLine={(lineNumber) => {
+                  if (rawContent && scrollRef.current) {
+                    const lines = rawContent.split('\n');
+                    const targetLine = Math.min(lineNumber - 1, lines.length - 1);
+                    const targetText = lines[targetLine]?.trim();
+                    
+                    if (targetText) {
+                      const headingMatch = targetText.match(/^#{1,3}\s+(.+)$/);
+                      if (headingMatch) {
+                        const slug = headingMatch[1].toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+                        const element = document.getElementById(slug);
+                        if (element) {
+                          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          element.classList.add('bg-yellow-200/30');
+                          setTimeout(() => element.classList.remove('bg-yellow-200/30'), 2000);
+                          return;
+                        }
+                      }
+                      
+                      const percentPosition = targetLine / lines.length;
+                      const scrollHeight = scrollRef.current.scrollHeight;
+                      const targetPosition = scrollHeight * percentPosition;
+                      scrollRef.current.scrollTo({ top: targetPosition, behavior: 'smooth' });
+                    }
+                  }
+                }}
+              />
+            </div>
+            
             {/* AI Discussion Header */}
-            <div className="p-3 border-b border-border font-medium flex items-center gap-2 text-sm">
+            <div className="p-3 border-b border-border font-medium flex items-center gap-2 text-sm shrink-0">
                 <MessageSquare className="w-4 h-4 text-primary" />
                 AI Discussion
             </div>

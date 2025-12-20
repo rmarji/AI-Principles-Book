@@ -100,6 +100,45 @@ export async function registerRoutes(
     }
   });
 
+  // Serve critique files for chapters
+  app.get("/api/critiques/:id", async (req, res) => {
+    const chapterId = req.params.id;
+    const critiquePath = path.join(process.cwd(), "critiques", `${chapterId}-critique.md`);
+    
+    try {
+      if (fs.existsSync(critiquePath)) {
+        const content = fs.readFileSync(critiquePath, "utf-8");
+        res.json({ id: chapterId, content });
+      } else {
+        res.status(404).json({ error: "Critique not found" });
+      }
+    } catch (error) {
+      console.error("Error reading critique:", error);
+      res.status(500).json({ error: "Failed to read critique" });
+    }
+  });
+
+  // List all available critiques
+  app.get("/api/critiques", async (req, res) => {
+    const critiquesDir = path.join(process.cwd(), "critiques");
+    
+    try {
+      if (fs.existsSync(critiquesDir)) {
+        const files = fs.readdirSync(critiquesDir).filter(f => f.endsWith("-critique.md"));
+        const critiques = files.map(f => {
+          const id = f.replace("-critique.md", "");
+          return { id, filename: f };
+        });
+        res.json({ critiques });
+      } else {
+        res.json({ critiques: [] });
+      }
+    } catch (error) {
+      console.error("Error listing critiques:", error);
+      res.status(500).json({ error: "Failed to list critiques" });
+    }
+  });
+
   // AI Chat endpoint with streaming
   app.post("/api/chat", async (req, res) => {
     try {
