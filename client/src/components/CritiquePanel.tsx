@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { ChevronDown, ChevronRight, CheckCircle, XCircle, Clock, AlertTriangle, FileWarning, ExternalLink, Info, FileText, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { marked } from "marked";
 
 type SectionType = 'info' | 'actionable';
 
@@ -201,41 +202,24 @@ export function CritiquePanel({ chapterId, onNavigateToLine }: CritiquePanelProp
     }
   }, [onNavigateToLine]);
 
-  const renderContentWithLinks = (content: string) => {
-    const parts: (string | React.ReactElement)[] = [];
-    let lastIndex = 0;
-    
-    const linePattern = /Lines?\s+(\d+)(?:[-–](\d+))?/gi;
-    let match;
-    
-    while ((match = linePattern.exec(content)) !== null) {
-      if (match.index > lastIndex) {
-        parts.push(content.slice(lastIndex, match.index));
-      }
-      
-      const startLine = parseInt(match[1]);
-      
-      parts.push(
-        <button
-          key={`line-${match.index}`}
-          onClick={() => handleLineClick(startLine)}
-          className="inline-flex items-center gap-1 text-primary hover:underline font-medium"
-          data-testid={`link-line-${startLine}`}
-        >
-          {match[0]}
-          <ExternalLink className="w-3 h-3" />
-        </button>
-      );
-      
-      lastIndex = match.index + match[0].length;
-    }
-    
-    if (lastIndex < content.length) {
-      parts.push(content.slice(lastIndex));
-    }
-    
-    return parts;
-  };
+  const renderMarkdownContent = useCallback((content: string) => {
+    const html = marked.parse(content, { async: false }) as string;
+    return (
+      <div 
+        className="critique-markdown prose prose-sm max-w-none
+          prose-headings:text-foreground prose-headings:font-semibold prose-headings:mt-3 prose-headings:mb-2
+          prose-h3:text-sm prose-h4:text-xs
+          prose-p:text-muted-foreground prose-p:my-1.5 prose-p:leading-relaxed
+          prose-ul:my-1.5 prose-ul:pl-4 prose-li:text-muted-foreground prose-li:my-0.5
+          prose-ol:my-1.5 prose-ol:pl-4
+          prose-strong:text-foreground prose-strong:font-semibold
+          prose-code:text-xs prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded
+          prose-pre:bg-muted prose-pre:p-2 prose-pre:rounded-md prose-pre:text-xs prose-pre:overflow-x-auto
+          prose-a:text-primary prose-a:no-underline hover:prose-a:underline"
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+    );
+  }, []);
 
   const getPriorityBadge = (priority?: CritiqueItem['priority']) => {
     switch (priority) {
@@ -341,7 +325,7 @@ export function CritiquePanel({ chapterId, onNavigateToLine }: CritiquePanelProp
                   {expandedItems.has(item.id) && (
                     <div className="px-3 pb-3 pt-2 border-t border-blue-500/20">
                       <div className="text-xs text-muted-foreground leading-relaxed max-h-60 overflow-y-auto break-words" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
-                        {renderContentWithLinks(item.content.slice(0, 3000))}
+                        {renderMarkdownContent(item.content.slice(0, 3000))}
                         {item.content.length > 3000 && (
                           <span className="text-muted-foreground/50">... (truncated)</span>
                         )}
@@ -402,7 +386,7 @@ export function CritiquePanel({ chapterId, onNavigateToLine }: CritiquePanelProp
               {expandedItems.has(item.id) && (
                 <div className="px-3 pb-3 pt-2 border-t border-border/50">
                   <div className="text-xs text-muted-foreground leading-relaxed mb-3 max-h-80 overflow-y-auto break-words" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
-                    {renderContentWithLinks(item.content.slice(0, 2500))}
+                    {renderMarkdownContent(item.content.slice(0, 2500))}
                     {item.content.length > 2500 && (
                       <span className="text-muted-foreground/50">... (truncated)</span>
                     )}
