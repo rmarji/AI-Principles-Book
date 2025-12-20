@@ -175,8 +175,8 @@ export function QualityChecklist({ wordCount, content, chapterId }: QualityCheck
   const overallScore = Math.round((passedCount / totalChecks) * 100);
 
   return (
-    <div className="border-b border-border" data-testid="quality-checklist">
-      <div className="p-3 border-b border-border bg-muted/30">
+    <div className="h-full flex flex-col" data-testid="quality-checklist">
+      <div className="p-3 border-b border-border bg-muted/30 shrink-0">
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
             <ListChecks className="w-3.5 h-3.5" />
@@ -192,7 +192,7 @@ export function QualityChecklist({ wordCount, content, chapterId }: QualityCheck
         </div>
       </div>
       
-      <div className="p-3 space-y-1.5 max-h-80 overflow-y-auto">
+      <div className="p-3 space-y-1.5 flex-1 overflow-y-auto">
         {checks.map(check => (
           <div 
             key={check.id} 

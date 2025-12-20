@@ -12,7 +12,8 @@ import {
   LayoutTemplate,
   User,
   FileDown,
-  FileText
+  FileText,
+  PanelLeftClose
 } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -30,6 +31,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { useLayout } from "./ReaderLayout";
 
 interface Subsection {
   id: string;
@@ -55,6 +57,7 @@ export function Sidebar() {
   const [isExporting, setIsExporting] = useState(false);
   const [chapterMeta, setChapterMeta] = useState<Record<string, ChapterMeta>>({});
   const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
+  const { setLeftSidebarOpen } = useLayout();
 
   useEffect(() => {
     fetch('/api/chapters')
@@ -118,15 +121,26 @@ export function Sidebar() {
   };
 
   return (
-    <div className="w-80 h-screen border-r bg-sidebar flex flex-col shrink-0">
-      <div className="p-6 border-b border-sidebar-border">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-primary-foreground">
-            <BrainCircuit size={18} />
+    <div className="w-72 h-screen border-r bg-sidebar flex flex-col shrink-0">
+      <div className="p-4 border-b border-sidebar-border">
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded bg-primary flex items-center justify-center text-primary-foreground">
+              <BrainCircuit size={16} />
+            </div>
+            <span className="font-heading font-bold text-base tracking-tight">AI Leadership</span>
           </div>
-          <span className="font-heading font-bold text-lg tracking-tight">AI Leadership</span>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => setLeftSidebarOpen(false)}
+            data-testid="button-close-sidebar"
+          >
+            <PanelLeftClose size={16} />
+          </Button>
         </div>
-        <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Interactive Guide</p>
+        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium ml-9">Interactive Guide</p>
       </div>
 
       <ScrollArea className="flex-1">

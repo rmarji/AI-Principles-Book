@@ -5,7 +5,7 @@ import { bookContent } from "@/lib/bookContent";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Sparkles, ArrowRight, MessageSquare, Share2, Bookmark, Brain, Loader2, FileText } from "lucide-react";
+import { Sparkles, ArrowRight, MessageSquare, Share2, Bookmark, Brain, Loader2, FileText, ListChecks, AlertTriangle, ChevronDown, PanelRightClose, PanelRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { marked } from "marked";
 import { QualityChecklist } from "@/components/QualityChecklist";
@@ -36,6 +36,8 @@ function formatWordCount(count: number): string {
   return `${count}`;
 }
 
+type RightPanel = 'quality' | 'critique' | 'discussion' | null;
+
 export default function Chapter() {
   const [match, params] = useRoute("/chapter/:id");
   const [location] = useLocation();
@@ -43,6 +45,8 @@ export default function Chapter() {
   const chapter = bookContent.find(c => c.id === chapterId);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [fullContent, setFullContent] = useState<string | null>(null);
+  const [activeRightPanel, setActiveRightPanel] = useState<RightPanel>('quality');
+  const [rightSidebarOpen, setRightSidebarOpen] = useState(true);
   const [rawContent, setRawContent] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [wordCount, setWordCount] = useState<number | null>(null);
@@ -203,61 +207,134 @@ export default function Chapter() {
           </div>
         </div>
 
-        {/* AI Assistant Context Panel */}
-        <div className="hidden xl:flex w-96 border-l border-border bg-background flex-col shrink-0">
-            {/* Quality Checklist */}
-            <QualityChecklist 
-              wordCount={wordCount} 
-              content={rawContent}
-              chapterId={chapterId || ''}
-            />
+        {/* Right Sidebar Toggle Button (when collapsed) */}
+        {!rightSidebarOpen && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="fixed right-2 top-2 z-50 h-8 w-8 hidden xl:flex"
+            onClick={() => setRightSidebarOpen(true)}
+            data-testid="button-open-right-sidebar"
+          >
+            <PanelRight className="h-4 w-4" />
+          </Button>
+        )}
+
+        {/* AI Assistant Context Panel - Accordion Style */}
+        {rightSidebarOpen && (
+          <div className="hidden xl:flex w-80 border-l border-border bg-background flex-col shrink-0">
+            {/* Header with close button */}
+            <div className="p-2 border-b border-border flex items-center justify-between bg-muted/30">
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tools</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={() => setRightSidebarOpen(false)}
+                data-testid="button-close-right-sidebar"
+              >
+                <PanelRightClose className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Panel Tabs */}
+            <div className="flex border-b border-border">
+              <button
+                onClick={() => setActiveRightPanel(activeRightPanel === 'quality' ? null : 'quality')}
+                className={`flex-1 p-2 text-xs font-medium flex items-center justify-center gap-1.5 transition-colors ${
+                  activeRightPanel === 'quality' 
+                    ? 'bg-primary/10 text-primary border-b-2 border-primary' 
+                    : 'text-muted-foreground hover:bg-muted/50'
+                }`}
+                data-testid="tab-quality"
+              >
+                <ListChecks className="w-3.5 h-3.5" />
+                Quality
+              </button>
+              <button
+                onClick={() => setActiveRightPanel(activeRightPanel === 'critique' ? null : 'critique')}
+                className={`flex-1 p-2 text-xs font-medium flex items-center justify-center gap-1.5 transition-colors ${
+                  activeRightPanel === 'critique' 
+                    ? 'bg-primary/10 text-primary border-b-2 border-primary' 
+                    : 'text-muted-foreground hover:bg-muted/50'
+                }`}
+                data-testid="tab-critique"
+              >
+                <AlertTriangle className="w-3.5 h-3.5" />
+                Critique
+              </button>
+              <button
+                onClick={() => setActiveRightPanel(activeRightPanel === 'discussion' ? null : 'discussion')}
+                className={`flex-1 p-2 text-xs font-medium flex items-center justify-center gap-1.5 transition-colors ${
+                  activeRightPanel === 'discussion' 
+                    ? 'bg-primary/10 text-primary border-b-2 border-primary' 
+                    : 'text-muted-foreground hover:bg-muted/50'
+                }`}
+                data-testid="tab-discussion"
+              >
+                <MessageSquare className="w-3.5 h-3.5" />
+                AI Chat
+              </button>
+            </div>
             
-            {/* Critique Panel */}
-            <div className="flex-1 min-h-0 border-b border-border">
-              <CritiquePanel 
-                chapterId={chapterId || ''}
-                onNavigateToLine={(lineNumber) => {
-                  if (rawContent && scrollRef.current) {
-                    const lines = rawContent.split('\n');
-                    const targetLine = Math.min(lineNumber - 1, lines.length - 1);
-                    const targetText = lines[targetLine]?.trim();
-                    
-                    if (targetText) {
-                      const headingMatch = targetText.match(/^#{1,3}\s+(.+)$/);
-                      if (headingMatch) {
-                        const slug = headingMatch[1].toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-                        const element = document.getElementById(slug);
-                        if (element) {
-                          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                          element.classList.add('bg-yellow-200/30');
-                          setTimeout(() => element.classList.remove('bg-yellow-200/30'), 2000);
-                          return;
-                        }
-                      }
+            {/* Panel Content */}
+            <div className="flex-1 min-h-0 overflow-hidden">
+              {activeRightPanel === 'quality' && (
+                <QualityChecklist 
+                  wordCount={wordCount} 
+                  content={rawContent}
+                  chapterId={chapterId || ''}
+                />
+              )}
+              
+              {activeRightPanel === 'critique' && (
+                <CritiquePanel 
+                  chapterId={chapterId || ''}
+                  onNavigateToLine={(lineNumber) => {
+                    if (rawContent && scrollRef.current) {
+                      const lines = rawContent.split('\n');
+                      const targetLine = Math.min(lineNumber - 1, lines.length - 1);
+                      const targetText = lines[targetLine]?.trim();
                       
-                      const percentPosition = targetLine / lines.length;
-                      const scrollHeight = scrollRef.current.scrollHeight;
-                      const targetPosition = scrollHeight * percentPosition;
-                      scrollRef.current.scrollTo({ top: targetPosition, behavior: 'smooth' });
+                      if (targetText) {
+                        const headingMatch = targetText.match(/^#{1,3}\s+(.+)$/);
+                        if (headingMatch) {
+                          const slug = headingMatch[1].toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+                          const element = document.getElementById(slug);
+                          if (element) {
+                            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            element.classList.add('bg-yellow-200/30');
+                            setTimeout(() => element.classList.remove('bg-yellow-200/30'), 2000);
+                            return;
+                          }
+                        }
+                        
+                        const percentPosition = targetLine / lines.length;
+                        const scrollHeight = scrollRef.current.scrollHeight;
+                        const targetPosition = scrollHeight * percentPosition;
+                        scrollRef.current.scrollTo({ top: targetPosition, behavior: 'smooth' });
+                      }
                     }
-                  }
-                }}
-              />
+                  }}
+                />
+              )}
+              
+              {activeRightPanel === 'discussion' && (
+                <AIDiscussion 
+                  chapterId={chapterId || ''}
+                  chapterTitle={chapter?.subtitle || chapter?.title || ''}
+                  chapterContent={rawContent}
+                />
+              )}
+              
+              {activeRightPanel === null && (
+                <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+                  Select a panel above
+                </div>
+              )}
             </div>
-            
-            {/* AI Discussion Header */}
-            <div className="p-3 border-b border-border font-medium flex items-center gap-2 text-sm shrink-0">
-                <MessageSquare className="w-4 h-4 text-primary" />
-                AI Discussion
-            </div>
-            
-            {/* AI Discussion Component */}
-            <AIDiscussion 
-              chapterId={chapterId || ''}
-              chapterTitle={chapter?.subtitle || chapter?.title || ''}
-              chapterContent={rawContent}
-            />
-        </div>
+          </div>
+        )}
       </div>
     </ReaderLayout>
   );
