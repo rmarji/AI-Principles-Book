@@ -191,51 +191,54 @@ export function Sidebar() {
 
                 return (
                   <Collapsible key={chapter.id} open={isExpanded} onOpenChange={() => toggleChapter(chapter.id)}>
-                    <div className="relative">
-                      <Link href={`/chapter/${chapter.id}`} className={cn(
-                          "group flex items-start gap-3 px-3 py-3 text-sm rounded-md transition-all relative",
-                          isActive 
-                            ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm" 
-                            : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground"
-                        )} data-testid={`link-chapter-${chapter.id}`}>
+                    <div className={cn(
+                        "group flex items-start gap-2 px-2 py-2 text-sm rounded-md transition-all",
+                        isActive 
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm" 
+                          : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground"
+                      )}>
+                      
+                      {/* Collapse/Expand Toggle - Always visible */}
+                      <CollapsibleTrigger asChild>
+                        <button 
+                          className={cn(
+                            "mt-0.5 p-1 rounded hover:bg-sidebar-accent transition-colors shrink-0",
+                            isActive ? "text-primary" : "text-muted-foreground"
+                          )}
+                          data-testid={`toggle-chapter-${chapter.id}`}
+                        >
+                          {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                        </button>
+                      </CollapsibleTrigger>
+                      
+                      {/* Chapter Link */}
+                      <Link href={`/chapter/${chapter.id}`} className="flex-1 min-w-0" data-testid={`link-chapter-${chapter.id}`}>
+                        <div className="flex items-start gap-2">
                           <div className="mt-0.5 shrink-0">
                             {chapter.status === 'completed' ? (
-                              <CheckCircle2 size={16} className="text-primary" />
+                              <CheckCircle2 size={14} className="text-primary" />
                             ) : (
                               <div className={cn(
-                                "w-4 h-4 rounded-full border-2 flex items-center justify-center",
+                                "w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center",
                                 isActive ? "border-primary" : "border-muted-foreground/30"
                               )}>
-                                {isActive && <div className="w-1.5 h-1.5 rounded-full bg-primary" />}
+                                {isActive && <div className="w-1 h-1 rounded-full bg-primary" />}
                               </div>
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <span className="block font-medium leading-none mb-1">{chapter.title}</span>
-                            <span className="text-xs text-muted-foreground line-clamp-1 group-hover:text-foreground/80 transition-colors">
+                            <span className="block font-medium leading-none mb-1 text-xs">{chapter.title}</span>
+                            <span className="text-[11px] text-muted-foreground line-clamp-1 group-hover:text-foreground/80 transition-colors">
                               {chapter.subtitle}
                             </span>
                             {meta?.wordCount && (
-                              <span className="text-[10px] text-muted-foreground/70 mt-1 block">
+                              <span className="text-[10px] text-muted-foreground/70 mt-0.5 block">
                                 {formatWordCount(meta.wordCount)}
                               </span>
                             )}
                           </div>
+                        </div>
                       </Link>
-                      
-                      {hasSubsections && (
-                        <CollapsibleTrigger asChild>
-                          <button 
-                            className={cn(
-                              "absolute right-2 top-3 p-1 rounded hover:bg-sidebar-accent/50 transition-colors",
-                              isActive ? "text-primary" : "text-muted-foreground"
-                            )}
-                            data-testid={`toggle-chapter-${chapter.id}`}
-                          >
-                            {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                          </button>
-                        </CollapsibleTrigger>
-                      )}
                     </div>
                     
                     {hasSubsections && (

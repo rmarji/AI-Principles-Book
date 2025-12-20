@@ -309,10 +309,10 @@ export function CritiquePanel({ chapterId, onNavigateToLine }: CritiquePanelProp
               </button>
               
               {expandedItems.has(item.id) && (
-                <div className="px-3 pb-3 pt-1 border-t border-border/50">
-                  <div className="text-xs text-muted-foreground whitespace-pre-wrap mb-3 max-h-60 overflow-y-auto">
-                    {renderContentWithLinks(item.content.slice(0, 1500))}
-                    {item.content.length > 1500 && (
+                <div className="px-3 pb-3 pt-2 border-t border-border/50">
+                  <div className="text-xs text-muted-foreground leading-relaxed mb-3 max-h-80 overflow-y-auto break-words" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+                    {renderContentWithLinks(item.content.slice(0, 2500))}
+                    {item.content.length > 2500 && (
                       <span className="text-muted-foreground/50">... (truncated)</span>
                     )}
                   </div>
