@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
-import { ChevronDown, ChevronRight, CheckCircle, XCircle, Clock, AlertTriangle, FileWarning, ExternalLink } from "lucide-react";
+import { ChevronDown, ChevronRight, CheckCircle, XCircle, Clock, AlertTriangle, FileWarning, ExternalLink, Info, FileText, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+
+type SectionType = 'info' | 'actionable';
 
 interface CritiqueItem {
   id: string;
@@ -11,6 +13,7 @@ interface CritiqueItem {
   lineRefs: LineRef[];
   priority?: 'critical' | 'high' | 'medium' | 'low';
   status: 'pending' | 'approved' | 'dismissed';
+  sectionType: SectionType;
 }
 
 interface LineRef {
@@ -22,6 +25,28 @@ interface LineRef {
 interface CritiquePanelProps {
   chapterId: string;
   onNavigateToLine?: (lineNumber: number) => void;
+}
+
+const INFO_SECTION_KEYWORDS = [
+  'executive summary',
+  'bottom line',
+  'estimated revision effort',
+  'overview',
+  'introduction',
+  'summary grade',
+  'time required',
+  'complexity',
+  'dependencies',
+];
+
+function getSectionType(title: string): SectionType {
+  const lowerTitle = title.toLowerCase();
+  for (const keyword of INFO_SECTION_KEYWORDS) {
+    if (lowerTitle.includes(keyword)) {
+      return 'info';
+    }
+  }
+  return 'actionable';
 }
 
 function parseLineReferences(text: string): LineRef[] {
@@ -56,15 +81,19 @@ function parseCritique(content: string): CritiqueItem[] {
     const title = lines[0]?.trim() || `Section ${index + 1}`;
     const sectionContent = lines.slice(1).join('\n').trim();
     
+    const sectionType = getSectionType(title);
+    
     let priority: CritiqueItem['priority'] = undefined;
-    if (/critical/i.test(title) || /critical/i.test(sectionContent.slice(0, 200))) {
-      priority = 'critical';
-    } else if (/high/i.test(title)) {
-      priority = 'high';
-    } else if (/medium/i.test(title)) {
-      priority = 'medium';
-    } else if (/low/i.test(title) || /enhancement/i.test(title)) {
-      priority = 'low';
+    if (sectionType === 'actionable') {
+      if (/critical/i.test(title) || /critical/i.test(sectionContent.slice(0, 200))) {
+        priority = 'critical';
+      } else if (/high/i.test(title)) {
+        priority = 'high';
+      } else if (/medium/i.test(title)) {
+        priority = 'medium';
+      } else if (/low/i.test(title) || /enhancement/i.test(title)) {
+        priority = 'low';
+      }
     }
     
     const lineRefs = parseLineReferences(sectionContent);
@@ -75,7 +104,8 @@ function parseCritique(content: string): CritiqueItem[] {
       content: sectionContent,
       lineRefs,
       priority,
-      status: 'pending',
+      status: sectionType === 'info' ? 'approved' : 'pending',
+      sectionType,
     });
   });
   
@@ -100,7 +130,6 @@ function saveStatus(chapterId: string, statuses: Record<string, 'pending' | 'app
 }
 
 export function CritiquePanel({ chapterId, onNavigateToLine }: CritiquePanelProps) {
-  const [critique, setCritique] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [items, setItems] = useState<CritiqueItem[]>([]);
@@ -122,18 +151,21 @@ export function CritiquePanel({ chapterId, onNavigateToLine }: CritiquePanelProp
         return res.json();
       })
       .then(data => {
-        setCritique(data.content);
         const parsed = parseCritique(data.content);
         const savedStatuses = loadSavedStatus(chapterId);
         
         const itemsWithStatus = parsed.map(item => ({
           ...item,
-          status: savedStatuses[item.id] || 'pending'
+          status: item.sectionType === 'info' ? 'approved' as const : (savedStatuses[item.id] || 'pending' as const)
         }));
         
         setItems(itemsWithStatus);
         setStatuses(savedStatuses);
         setLoading(false);
+        
+        if (itemsWithStatus.length > 0 && itemsWithStatus[0].sectionType === 'info') {
+          setExpandedItems(new Set([itemsWithStatus[0].id]));
+        }
       })
       .catch(err => {
         setError(err.message);
@@ -182,7 +214,6 @@ export function CritiquePanel({ chapterId, onNavigateToLine }: CritiquePanelProp
       }
       
       const startLine = parseInt(match[1]);
-      const endLine = match[2] ? parseInt(match[2]) : undefined;
       
       parts.push(
         <button
@@ -221,19 +252,24 @@ export function CritiquePanel({ chapterId, onNavigateToLine }: CritiquePanelProp
     }
   };
 
-  const getStatusIcon = (status: CritiqueItem['status']) => {
-    switch (status) {
+  const getStatusIcon = (item: CritiqueItem) => {
+    if (item.sectionType === 'info') {
+      return <Info className="w-4 h-4 text-blue-500 shrink-0" />;
+    }
+    switch (item.status) {
       case 'approved':
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
+        return <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />;
       case 'dismissed':
-        return <XCircle className="w-4 h-4 text-muted-foreground" />;
+        return <XCircle className="w-4 h-4 text-muted-foreground shrink-0" />;
       default:
-        return <Clock className="w-4 h-4 text-yellow-500" />;
+        return <Clock className="w-4 h-4 text-yellow-500 shrink-0" />;
     }
   };
 
-  const pendingCount = items.filter(i => i.status === 'pending').length;
-  const approvedCount = items.filter(i => i.status === 'approved').length;
+  const actionableItems = items.filter(i => i.sectionType === 'actionable');
+  const pendingCount = actionableItems.filter(i => i.status === 'pending').length;
+  const approvedCount = actionableItems.filter(i => i.status === 'approved').length;
+  const infoItems = items.filter(i => i.sectionType === 'info');
 
   if (loading) {
     return (
@@ -254,7 +290,7 @@ export function CritiquePanel({ chapterId, onNavigateToLine }: CritiquePanelProp
 
   return (
     <div className="flex flex-col h-full" data-testid="critique-panel">
-      <div className="p-3 border-b border-border bg-muted/30">
+      <div className="p-3 border-b border-border bg-muted/30 shrink-0">
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
             <AlertTriangle className="w-3.5 h-3.5" />
@@ -262,7 +298,7 @@ export function CritiquePanel({ chapterId, onNavigateToLine }: CritiquePanelProp
           </h3>
           <div className="flex items-center gap-2">
             <span className="text-[10px] text-muted-foreground">
-              {approvedCount}/{items.length} approved
+              {approvedCount}/{actionableItems.length} done
             </span>
             {pendingCount > 0 && (
               <Badge variant="secondary" className="text-[10px] h-4">
@@ -274,8 +310,63 @@ export function CritiquePanel({ chapterId, onNavigateToLine }: CritiquePanelProp
       </div>
       
       <ScrollArea className="flex-1">
-        <div className="p-2 space-y-1">
-          {items.map(item => (
+        <div className="p-2 space-y-2">
+          {/* Info Sections (Executive Summary, Bottom Line, etc.) */}
+          {infoItems.length > 0 && (
+            <div className="space-y-1">
+              {infoItems.map(item => (
+                <div 
+                  key={item.id} 
+                  className="rounded-lg border border-blue-500/30 bg-blue-500/5"
+                  data-testid={`critique-item-${item.id}`}
+                >
+                  <button
+                    onClick={() => toggleExpand(item.id)}
+                    className="w-full p-2 flex items-start gap-2 text-left hover:bg-blue-500/10 rounded-t-lg transition-colors"
+                  >
+                    {expandedItems.has(item.id) ? (
+                      <ChevronDown className="w-4 h-4 mt-0.5 shrink-0" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4 mt-0.5 shrink-0" />
+                    )}
+                    {getStatusIcon(item)}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs font-medium">{item.title}</span>
+                        <Badge variant="outline" className="text-[10px] h-4 border-blue-500/50 text-blue-600">Info</Badge>
+                      </div>
+                    </div>
+                  </button>
+                  
+                  {expandedItems.has(item.id) && (
+                    <div className="px-3 pb-3 pt-2 border-t border-blue-500/20">
+                      <div className="text-xs text-muted-foreground leading-relaxed max-h-60 overflow-y-auto break-words" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+                        {renderContentWithLinks(item.content.slice(0, 3000))}
+                        {item.content.length > 3000 && (
+                          <span className="text-muted-foreground/50">... (truncated)</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Separator if both types exist */}
+          {infoItems.length > 0 && actionableItems.length > 0 && (
+            <div className="flex items-center gap-2 py-1">
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium flex items-center gap-1">
+                <Target className="w-3 h-3" />
+                Action Items
+              </span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+          )}
+
+          {/* Actionable Sections */}
+          {actionableItems.map(item => (
             <div 
               key={item.id} 
               className={`rounded-lg border ${
@@ -294,7 +385,7 @@ export function CritiquePanel({ chapterId, onNavigateToLine }: CritiquePanelProp
                 ) : (
                   <ChevronRight className="w-4 h-4 mt-0.5 shrink-0" />
                 )}
-                {getStatusIcon(item.status)}
+                {getStatusIcon(item)}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-xs font-medium truncate">{item.title}</span>
