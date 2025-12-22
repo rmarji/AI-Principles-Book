@@ -1,9 +1,11 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { ChevronDown, ChevronRight, CheckCircle, XCircle, Clock, AlertTriangle, FileWarning, ExternalLink, Info, FileText, Target } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { ChevronDown, ChevronRight, CheckCircle, XCircle, Clock, AlertTriangle, FileWarning, Info, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { marked } from "marked";
+import { ScorecardHeader } from "./ScorecardHeader";
+import type { ChapterCritique, CritiqueSection, CritiqueScorecard, LineRef } from "../../../shared/types/critique";
 
 type SectionType = 'info' | 'actionable';
 
@@ -15,12 +17,6 @@ interface CritiqueItem {
   priority?: 'critical' | 'high' | 'medium' | 'low';
   status: 'pending' | 'approved' | 'dismissed';
   sectionType: SectionType;
-}
-
-interface LineRef {
-  text: string;
-  startLine: number;
-  endLine?: number;
 }
 
 interface CritiquePanelProps {
@@ -130,17 +126,32 @@ function saveStatus(chapterId: string, statuses: Record<string, 'pending' | 'app
   localStorage.setItem(getStorageKey(chapterId), JSON.stringify(statuses));
 }
 
+// Convert structured CritiqueSection to CritiqueItem with status
+function convertSectionToItem(section: CritiqueSection, savedStatuses: Record<string, 'pending' | 'approved' | 'dismissed'>): CritiqueItem {
+  return {
+    id: section.id,
+    title: section.title,
+    content: section.content,
+    lineRefs: section.lineRefs,
+    priority: section.priority,
+    status: section.type === 'info' ? 'approved' : (savedStatuses[section.id] || 'pending'),
+    sectionType: section.type
+  };
+}
+
 export function CritiquePanel({ chapterId, onNavigateToLine }: CritiquePanelProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [items, setItems] = useState<CritiqueItem[]>([]);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [statuses, setStatuses] = useState<Record<string, 'pending' | 'approved' | 'dismissed'>>({});
+  const [scorecard, setScorecard] = useState<CritiqueScorecard | null>(null);
 
   useEffect(() => {
     setLoading(true);
     setError(null);
-    
+    setScorecard(null);
+
     fetch(`/api/critiques/${chapterId}`)
       .then(res => {
         if (!res.ok) {
@@ -151,21 +162,41 @@ export function CritiquePanel({ chapterId, onNavigateToLine }: CritiquePanelProp
         }
         return res.json();
       })
-      .then(data => {
-        const parsed = parseCritique(data.content);
+      .then((data: ChapterCritique | { content: string; legacy?: boolean }) => {
         const savedStatuses = loadSavedStatus(chapterId);
-        
-        const itemsWithStatus = parsed.map(item => ({
-          ...item,
-          status: item.sectionType === 'info' ? 'approved' as const : (savedStatuses[item.id] || 'pending' as const)
-        }));
-        
-        setItems(itemsWithStatus);
-        setStatuses(savedStatuses);
+
+        // Check if this is structured JSON or legacy markdown
+        if ('sections' in data && Array.isArray(data.sections)) {
+          // Structured JSON format
+          const critique = data as ChapterCritique;
+          setScorecard(critique.scorecard);
+
+          const itemsWithStatus = critique.sections.map(section =>
+            convertSectionToItem(section, savedStatuses)
+          );
+
+          setItems(itemsWithStatus);
+          setStatuses(savedStatuses);
+        } else {
+          // Legacy markdown format
+          const legacyData = data as { content: string };
+          const parsed = parseCritique(legacyData.content);
+
+          const itemsWithStatus = parsed.map(item => ({
+            ...item,
+            status: item.sectionType === 'info' ? 'approved' as const : (savedStatuses[item.id] || 'pending' as const)
+          }));
+
+          setItems(itemsWithStatus);
+          setStatuses(savedStatuses);
+        }
+
         setLoading(false);
-        
-        if (itemsWithStatus.length > 0 && itemsWithStatus[0].sectionType === 'info') {
-          setExpandedItems(new Set([itemsWithStatus[0].id]));
+
+        // Auto-expand first info item
+        const firstInfoItem = items.find(i => i.sectionType === 'info');
+        if (firstInfoItem) {
+          setExpandedItems(new Set([firstInfoItem.id]));
         }
       })
       .catch(err => {
@@ -295,6 +326,11 @@ export function CritiquePanel({ chapterId, onNavigateToLine }: CritiquePanelProp
       
       <ScrollArea className="flex-1">
         <div className="p-2 space-y-2">
+          {/* Scorecard Header */}
+          {scorecard && (
+            <ScorecardHeader scorecard={scorecard} />
+          )}
+
           {/* Info Sections (Executive Summary, Bottom Line, etc.) */}
           {infoItems.length > 0 && (
             <div className="space-y-1">

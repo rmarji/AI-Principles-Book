@@ -25,31 +25,26 @@ This book isn't about code or complex algorithms. It's about a simple shift: mov
 We'll show you how to:
 
 - **Build your own "AI workforce"** to handle research, scheduling, and analysis
-- **Clone your best self** to be everywhere at once and multiply your impact
 - **Design AI agent org charts** that coordinate multiple agents effectively
 - **Delegate strategically** to maximize your leverage and impact
 - **Reclaim 20+ hours per week** currently lost to administrative work
 - **Make better decisions** by deploying AI for research and analysis
 - **Lead organizations** through the AI agent transformation
 
----
+### Core Themes
 
-## The 10 Principles
-
-| # | Principle | Core Message |
-|---|-----------|--------------|
-| **1** | **Know Your AI** | Understand what AI agents are and why they change everything |
-| **2** | **Context is King** | Context transforms AI capability into human value |
-| **3** | **The Right Mind for the Task** | Match each agent type to its ideal role |
-| **4** | **Audit. Automate. Amplify.** | A 3-step process for strategic AI adoption |
-| **5** | **Master the Transition** | Design seamless human-AI handoffs |
-| **6** | **Aligned Decisions at Scale** | Use structured frameworks for quality, unbiased decisions |
-| **7** | **Clone Your Best Self** | AI multiplies your presence - be everywhere, achieve more |
-| **8** | **Collaborate, Don't Abdicate** | Partner with AI without losing what makes you valuable |
-| **9** | **Architect the Future Org** | Lead organizational transformation with AI |
-| **10** | **The Price of Power** | With great AI capability comes great responsibility |
-
----
+1. **AI Fundamentals & Mindset** — Understanding the AI landscape and developing the right mental models
+2. **From Tools to Agents** — The evolution from reactive AI to autonomous digital workers
+3. **Building Your AI Workforce** — Identifying opportunities and designing agent roles
+4. **AI Agent Org Charts** — Organizing agents into effective teams and hierarchies
+5. **Delegation & Management** — Applying proven leadership principles to digital workers
+6. **Productivity & Time Mastery** — Practical applications for scheduling, email, and meetings
+7. **Decision Intelligence** — Using agents for analysis, research, and scenario planning
+8. **Strategic Execution** — Goal tracking, monitoring, and driving initiatives forward
+9. **Human-AI Collaboration** — Building seamless hybrid teams
+10. **Organizational Leadership** — Scaling AI adoption across enterprises
+11. **Ethics & Governance** — Responsible deployment and oversight
+12. **Future-Proofing** — Preparing for the continued evolution of AI capabilities
 
 ### The Promise
 
