@@ -289,3 +289,39 @@
   margin: 1.5rem 0;
   overflow-x: auto;
 }
+
+.chapter-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.9375rem;
+  overflow-x: auto;
+  display: block;
+}
+
+.chapter-content thead {
+  background: hsl(var(--muted));
+}
+
+.chapter-content th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  border-bottom: 2px solid hsl(var(--border));
+  white-space: nowrap;
+}
+
+.chapter-content td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid hsl(var(--border));
+  color: hsl(var(--muted-foreground));
+}
+
+.chapter-content tbody tr:hover {
+  background: hsl(var(--muted) / 0.5);
+}
+
+.chapter-content tbody tr:last-child td {
+  border-bottom: none;
+}

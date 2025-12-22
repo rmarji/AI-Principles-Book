@@ -184,7 +184,7 @@ export function Sidebar() {
               Chapters
             </div>
             <nav className="space-y-1">
-              {bookContent.map((chapter) => {
+              {bookContent.filter(ch => !ch.id.startsWith('appendix-')).map((chapter) => {
                 if (chapter.id === 'overview') return null;
                 
                 const isActive = location === `/chapter/${chapter.id}`;
@@ -293,6 +293,46 @@ export function Sidebar() {
                       </CollapsibleContent>
                     )}
                   </Collapsible>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* Appendices Section */}
+          <div className="space-y-4">
+            <div className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Appendices
+            </div>
+            <nav className="space-y-1">
+              {bookContent.filter(ch => ch.id.startsWith('appendix-')).map((appendix) => {
+                const isActive = location === `/chapter/${appendix.id}`;
+                const meta = chapterMeta[appendix.id];
+
+                return (
+                  <Link
+                    key={appendix.id}
+                    href={`/chapter/${appendix.id}`}
+                    className={cn(
+                      "flex items-start gap-2 px-3 py-2 text-sm rounded-md transition-all",
+                      isActive
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
+                        : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground"
+                    )}
+                    data-testid={`link-${appendix.id}`}
+                  >
+                    <CheckCircle2 size={14} className="mt-0.5 text-primary shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <span className="block font-medium leading-none mb-1 text-xs">{appendix.title}</span>
+                      <span className="text-[11px] text-muted-foreground line-clamp-1">
+                        {appendix.subtitle}
+                      </span>
+                      {meta?.wordCount && (
+                        <span className="text-[10px] text-muted-foreground/70 mt-0.5 block">
+                          {formatWordCount(meta.wordCount)}
+                        </span>
+                      )}
+                    </div>
+                  </Link>
                 );
               })}
             </nav>

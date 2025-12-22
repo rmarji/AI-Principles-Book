@@ -11,13 +11,8 @@ import { marked } from "marked";
 import { QualityChecklist } from "@/components/QualityChecklist";
 import { AIDiscussion } from "@/components/AIDiscussion";
 import { CritiquePanel } from "@/components/CritiquePanel";
-import { exportChapterToWord } from "@/lib/exportBook";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
+import { ScorecardBadge } from "@/components/ScorecardBadge";
 
 function generateSlug(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -140,6 +135,7 @@ export default function Chapter() {
                     {formatWordCount(wordCount)} words
                   </Badge>
                 )}
+                {chapterId && <ScorecardBadge chapterId={chapterId} />}
              </div>
              <div className="flex items-center gap-2">
                 <Button 

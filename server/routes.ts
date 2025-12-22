@@ -59,10 +59,19 @@ export async function registerRoutes(
   app.get("/api/chapters/:id", async (req, res) => {
     const chapterId = req.params.id;
     const chapterPath = path.join(process.cwd(), "content", "chapters", `${chapterId}.md`);
-    
+    // Also check appendices directory
+    const appendixPath = path.join(process.cwd(), "content", "appendices", `${chapterId}.md`);
+
     try {
+      let filePath = null;
       if (fs.existsSync(chapterPath)) {
-        const content = fs.readFileSync(chapterPath, "utf-8");
+        filePath = chapterPath;
+      } else if (fs.existsSync(appendixPath)) {
+        filePath = appendixPath;
+      }
+
+      if (filePath) {
+        const content = fs.readFileSync(filePath, "utf-8");
         const wordCount = countWords(content);
         const subsections = extractSubsections(content);
         res.json({ id: chapterId, content, wordCount, subsections });
@@ -75,46 +84,92 @@ export async function registerRoutes(
     }
   });
 
-  // List all available chapters with metadata
-  app.get("/api/chapters", async (req, res) => {
+  // List all available chapters with metadata (includes appendices)
+  app.get("/api/chapters", async (_req, res) => {
     const chaptersDir = path.join(process.cwd(), "content", "chapters");
-    
+    const appendicesDir = path.join(process.cwd(), "content", "appendices");
+
     try {
+      const chapters: Array<{ id: string; wordCount: number; subsections: Subsection[] }> = [];
+
+      // Read chapters
       if (fs.existsSync(chaptersDir)) {
         const files = fs.readdirSync(chaptersDir).filter(f => f.endsWith(".md"));
-        const chapters = files.map(f => {
+        for (const f of files) {
           const id = f.replace(".md", "");
           const filePath = path.join(chaptersDir, f);
           const content = fs.readFileSync(filePath, "utf-8");
           const wordCount = countWords(content);
           const subsections = extractSubsections(content);
-          return { id, wordCount, subsections };
-        });
-        res.json({ chapters });
-      } else {
-        res.json({ chapters: [] });
+          chapters.push({ id, wordCount, subsections });
+        }
       }
+
+      // Read appendices
+      if (fs.existsSync(appendicesDir)) {
+        const files = fs.readdirSync(appendicesDir).filter(f => f.endsWith(".md"));
+        for (const f of files) {
+          const id = f.replace(".md", "");
+          const filePath = path.join(appendicesDir, f);
+          const content = fs.readFileSync(filePath, "utf-8");
+          const wordCount = countWords(content);
+          const subsections = extractSubsections(content);
+          chapters.push({ id, wordCount, subsections });
+        }
+      }
+
+      res.json({ chapters });
     } catch (error) {
       console.error("Error listing chapters:", error);
       res.status(500).json({ error: "Failed to list chapters" });
     }
   });
 
-  // Serve critique files for chapters
+  // Serve critique files for chapters (prefer JSON, fall back to markdown)
   app.get("/api/critiques/:id", async (req, res) => {
     const chapterId = req.params.id;
-    const critiquePath = path.join(process.cwd(), "critiques", `${chapterId}-critique.md`);
-    
+    const jsonPath = path.join(process.cwd(), "critiques", `${chapterId}-critique.json`);
+    const mdPath = path.join(process.cwd(), "critiques", `${chapterId}-critique.md`);
+
     try {
-      if (fs.existsSync(critiquePath)) {
-        const content = fs.readFileSync(critiquePath, "utf-8");
-        res.json({ id: chapterId, content });
+      // Try JSON first (structured format)
+      if (fs.existsSync(jsonPath)) {
+        const content = fs.readFileSync(jsonPath, "utf-8");
+        const critique = JSON.parse(content);
+        res.json(critique);
+      }
+      // Fall back to markdown (legacy format)
+      else if (fs.existsSync(mdPath)) {
+        const content = fs.readFileSync(mdPath, "utf-8");
+        res.json({ id: chapterId, content, legacy: true });
       } else {
         res.status(404).json({ error: "Critique not found" });
       }
     } catch (error) {
       console.error("Error reading critique:", error);
       res.status(500).json({ error: "Failed to read critique" });
+    }
+  });
+
+  // Serve just the scorecard for quick loading in chapter header
+  app.get("/api/critiques/:id/scorecard", async (req, res) => {
+    const chapterId = req.params.id;
+    const jsonPath = path.join(process.cwd(), "critiques", `${chapterId}-critique.json`);
+
+    try {
+      if (fs.existsSync(jsonPath)) {
+        const content = fs.readFileSync(jsonPath, "utf-8");
+        const critique = JSON.parse(content);
+        res.json({
+          id: chapterId,
+          scorecard: critique.scorecard
+        });
+      } else {
+        res.status(404).json({ error: "Scorecard not found" });
+      }
+    } catch (error) {
+      console.error("Error reading scorecard:", error);
+      res.status(500).json({ error: "Failed to read scorecard" });
     }
   });
 

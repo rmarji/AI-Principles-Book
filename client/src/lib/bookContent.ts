@@ -484,5 +484,106 @@ export const bookContent: Chapter[] = [
     ],
     keywords: ["future-proofing", "multi-agent", "swarm", "AGI", "evolution"],
     status: "completed"
+  },
+  // Appendices
+  {
+    id: "appendix-a-glossary",
+    title: "Appendix A",
+    subtitle: "Glossary of AI Terms",
+    description: "Comprehensive definitions of AI terminology used throughout this book.",
+    content: "",
+    topics: ["Definitions", "Terminology", "Reference"],
+    keywords: ["glossary", "definitions", "terms", "reference"],
+    status: "completed"
+  },
+  {
+    id: "appendix-b-platform-comparison",
+    title: "Appendix B",
+    subtitle: "AI Agent Platform Comparison",
+    description: "Current comparison of AI models, platforms, and tools with December 2025 pricing.",
+    content: "",
+    topics: ["Platforms", "Pricing", "Models", "Tools"],
+    keywords: ["platforms", "comparison", "pricing", "tools"],
+    status: "completed"
+  },
+  {
+    id: "appendix-c-prompt-templates",
+    title: "Appendix C",
+    subtitle: "Prompt Engineering Templates",
+    description: "Ready-to-use prompt templates for common AI agent tasks.",
+    content: "",
+    topics: ["Prompts", "Templates", "Examples"],
+    keywords: ["prompts", "templates", "examples"],
+    status: "completed"
+  },
+  {
+    id: "appendix-d-workflow-checklists",
+    title: "Appendix D",
+    subtitle: "Workflow Design Checklists",
+    description: "Comprehensive checklists for designing, implementing, and monitoring AI workflows.",
+    content: "",
+    topics: ["Checklists", "Workflows", "Implementation"],
+    keywords: ["checklists", "workflows", "implementation"],
+    status: "completed"
+  },
+  {
+    id: "appendix-e-agent-role-templates",
+    title: "Appendix E",
+    subtitle: "Agent Role Templates",
+    description: "Role templates and system prompts for common AI agent positions.",
+    content: "",
+    topics: ["Roles", "Templates", "System Prompts"],
+    keywords: ["roles", "templates", "system-prompts"],
+    status: "completed"
+  },
+  {
+    id: "appendix-f-measurement-roi",
+    title: "Appendix F",
+    subtitle: "Measurement & ROI Frameworks",
+    description: "Formulas, KPIs, and templates for measuring AI agent performance and ROI.",
+    content: "",
+    topics: ["Metrics", "ROI", "KPIs", "Measurement"],
+    keywords: ["metrics", "roi", "kpis", "measurement"],
+    status: "completed"
+  },
+  {
+    id: "appendix-g-governance-templates",
+    title: "Appendix G",
+    subtitle: "AI Governance Policy Templates",
+    description: "Policy templates for responsible AI governance in your organization.",
+    content: "",
+    topics: ["Governance", "Policies", "Compliance"],
+    keywords: ["governance", "policies", "compliance"],
+    status: "completed"
+  },
+  {
+    id: "appendix-h-risk-assessment",
+    title: "Appendix H",
+    subtitle: "Risk Assessment Frameworks",
+    description: "Frameworks and tools for identifying and mitigating AI deployment risks.",
+    content: "",
+    topics: ["Risk", "Assessment", "Mitigation"],
+    keywords: ["risk", "assessment", "mitigation"],
+    status: "completed"
+  },
+  {
+    id: "appendix-i-resources",
+    title: "Appendix I",
+    subtitle: "Recommended Resources",
+    description: "Curated books, courses, newsletters, podcasts, and communities for continued learning.",
+    content: "",
+    topics: ["Resources", "Learning", "Books", "Courses"],
+    keywords: ["resources", "learning", "books", "courses"],
+    status: "completed"
+  },
+  {
+    id: "appendix-j-case-study-index",
+    title: "Appendix J",
+    subtitle: "Case Study Index",
+    description: "Reference index to all case studies and examples used throughout the book.",
+    content: "",
+    topics: ["Case Studies", "Examples", "Index"],
+    keywords: ["case-studies", "examples", "index"],
+    status: "completed"
   }
 ];
