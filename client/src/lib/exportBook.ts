@@ -180,19 +180,76 @@ export async function exportToPDF() {
       content = chapter.content;
     }
 
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(10);
-    const contentText = stripHtml(content);
-    const lines = pdf.splitTextToSize(contentText, maxWidth);
-
-    lines.forEach((line: string) => {
+    // Parse markdown into sections for proper formatting
+    const parsedSections = parseMarkdownToSections(content);
+    
+    for (const section of parsedSections) {
       if (yPosition > pageHeight - 30) {
         pdf.addPage();
         yPosition = 20;
       }
-      pdf.text(line, margin, yPosition);
-      yPosition += 6;
-    });
+
+      if (section.type === 'heading') {
+        const headingSize = section.level === 1 ? 16 : section.level === 2 ? 14 : section.level === 3 ? 12 : 11;
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(headingSize);
+        const headingLines = pdf.splitTextToSize(section.text, maxWidth);
+        headingLines.forEach((line: string) => {
+          if (yPosition > pageHeight - 30) {
+            pdf.addPage();
+            yPosition = 20;
+          }
+          pdf.text(line, margin, yPosition);
+          yPosition += headingSize * 0.5 + 2;
+        });
+        yPosition += 4;
+      } else if (section.type === 'listItem') {
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(10);
+        const bulletText = `• ${section.text}`;
+        const listLines = pdf.splitTextToSize(bulletText, maxWidth - 5);
+        listLines.forEach((line: string, idx: number) => {
+          if (yPosition > pageHeight - 30) {
+            pdf.addPage();
+            yPosition = 20;
+          }
+          pdf.text(idx === 0 ? line : `  ${line}`, margin, yPosition);
+          yPosition += 5;
+        });
+      } else if (section.type === 'blockquote') {
+        pdf.setFont('helvetica', 'italic');
+        pdf.setFontSize(10);
+        const quoteLines = pdf.splitTextToSize(section.text, maxWidth - 10);
+        quoteLines.forEach((line: string) => {
+          if (yPosition > pageHeight - 30) {
+            pdf.addPage();
+            yPosition = 20;
+          }
+          pdf.text(line, margin + 5, yPosition);
+          yPosition += 5;
+        });
+        yPosition += 3;
+      } else if (section.type === 'separator') {
+        yPosition += 5;
+        pdf.setDrawColor(200, 200, 200);
+        pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+        yPosition += 8;
+      } else {
+        // Regular paragraph
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(10);
+        const paraLines = pdf.splitTextToSize(section.text, maxWidth);
+        paraLines.forEach((line: string) => {
+          if (yPosition > pageHeight - 30) {
+            pdf.addPage();
+            yPosition = 20;
+          }
+          pdf.text(line, margin, yPosition);
+          yPosition += 5;
+        });
+        yPosition += 3;
+      }
+    }
   }
 
   pdf.save('AI-Leadership-Guide.pdf');
