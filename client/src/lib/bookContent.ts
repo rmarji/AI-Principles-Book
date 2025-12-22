@@ -19,8 +19,9 @@ export const bookContent: Chapter[] = [
       <p class="lead">A practical playbook for leaders and professionals to build a digital workforce that actually helps you get things done.</p>
       
       <div class="bg-muted/30 p-6 rounded-xl border border-border my-6">
-        <h4 class="font-heading font-semibold mb-2">About the Author</h4>
-        <p class="mb-0"><strong>Rayo Marji</strong> is the CTO of Arootah, where he leads the intersection of technology and peak performance coaching. This book distills his experience in building AI systems that empower leaders to scale their impact.</p>
+        <h4 class="font-heading font-semibold mb-2">About the Authors</h4>
+        <p class="mb-3"><strong>Rayo Marji</strong> is the CTO of Arootah, where he leads the intersection of technology and peak performance coaching. This book distills his experience in building AI systems that empower leaders to scale their impact.</p>
+        <p class="mb-0"><strong>Rich Bello</strong> is the Co-Founder of Arootah, bringing decades of executive leadership experience to the intersection of high performance and technology.</p>
       </div>
 
       <p>This book isn't about code or complex algorithms. It's about a simple shift: moving from using AI as a <em>tool</em> (like a super-smart calculator) to using AI as a <em>team member</em> (like a capable digital intern).</p>

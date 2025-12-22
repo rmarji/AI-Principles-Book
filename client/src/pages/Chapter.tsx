@@ -5,12 +5,13 @@ import { bookContent } from "@/lib/bookContent";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Sparkles, ArrowRight, MessageSquare, Share2, Bookmark, Brain, Loader2, FileText, ListChecks, AlertTriangle, ChevronDown, PanelRightClose, PanelRight } from "lucide-react";
+import { Sparkles, ArrowRight, MessageSquare, Share2, Bookmark, Brain, Loader2, FileText, ListChecks, AlertTriangle, ChevronDown, PanelRightClose, PanelRight, Download } from "lucide-react";
 import { motion } from "framer-motion";
 import { marked } from "marked";
 import { QualityChecklist } from "@/components/QualityChecklist";
 import { AIDiscussion } from "@/components/AIDiscussion";
 import { CritiquePanel } from "@/components/CritiquePanel";
+
 import { ScorecardBadge } from "@/components/ScorecardBadge";
 
 function generateSlug(text: string): string {
@@ -51,6 +52,19 @@ export default function Chapter() {
   const [rawContent, setRawContent] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [wordCount, setWordCount] = useState<number | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownloadChapter = async () => {
+    if (!chapterId) return;
+    setIsDownloading(true);
+    try {
+      await exportChapterToWord(chapterId);
+    } catch (error) {
+      console.error('Download failed:', error);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -125,6 +139,17 @@ export default function Chapter() {
                 {chapterId && <ScorecardBadge chapterId={chapterId} />}
              </div>
              <div className="flex items-center gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8" 
+                  onClick={handleDownloadChapter}
+                  disabled={isDownloading}
+                  title="Download this chapter as Word"
+                  data-testid="button-download-chapter"
+                >
+                    {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                </Button>
                 <Button variant="ghost" size="icon" className="h-8 w-8" data-testid="button-bookmark">
                     <Bookmark className="w-4 h-4" />
                 </Button>

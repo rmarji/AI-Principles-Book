@@ -13,12 +13,14 @@ import {
   User,
   FileDown,
   FileText,
-  PanelLeftClose
+  PanelLeftClose,
+  List,
+  FolderDown
 } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { exportToPDF, exportToWord } from "@/lib/exportBook";
+import { exportToPDF, exportToWord, exportAllChaptersAsZip, AUTHORS } from "@/lib/exportBook";
 import { useState, useEffect } from "react";
 import {
   DropdownMenu,
@@ -101,6 +103,17 @@ export function Sidebar() {
     }
   };
 
+  const handleExportZip = async () => {
+    setIsExporting(true);
+    try {
+      await exportAllChaptersAsZip();
+    } catch (error) {
+      console.error('Export to ZIP failed:', error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const toggleChapter = (chapterId: string) => {
     setExpandedChapters(prev => {
       const next = new Set(prev);
@@ -154,6 +167,15 @@ export function Sidebar() {
               )} data-testid="link-cover">
                 <LayoutTemplate size={16} />
                 Cover & Overview
+              </Link>
+             <Link href="/toc" className={cn(
+                "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
+                location === "/toc" 
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground" 
+                  : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground"
+              )} data-testid="link-toc">
+                <List size={16} />
+                Table of Contents
               </Link>
           </div>
 
@@ -333,14 +355,18 @@ export function Sidebar() {
                   {isExporting ? 'Exporting...' : 'Download Book'}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem onClick={handleExportPDF} className="gap-2 cursor-pointer" data-testid="button-export-pdf">
                   <FileText size={16} />
-                  Export as PDF
+                  Full Book as PDF
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleExportWord} className="gap-2 cursor-pointer" data-testid="button-export-word">
                   <FileText size={16} />
-                  Export as Word
+                  Full Book as Word
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportZip} className="gap-2 cursor-pointer" data-testid="button-export-zip">
+                  <FolderDown size={16} />
+                  All Chapters as ZIP
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -348,16 +374,22 @@ export function Sidebar() {
         </div>
       </ScrollArea>
 
-      <div className="p-4 border-t border-sidebar-border bg-sidebar-accent/10">
-        <div className="flex items-center gap-3">
-          <Avatar className="h-9 w-9 border border-primary/20">
-            <AvatarImage src="/placeholder-avatar.png" />
-            <AvatarFallback className="bg-primary text-primary-foreground font-bold">RM</AvatarFallback>
-          </Avatar>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">Rayo Marji</p>
-            <p className="text-xs text-muted-foreground truncate">CTO, Arootah</p>
-          </div>
+      <div className="p-3 border-t border-sidebar-border bg-sidebar-accent/10" data-testid="sidebar-authors">
+        <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2 font-medium">Authors</div>
+        <div className="space-y-2">
+          {AUTHORS.map((author, idx) => (
+            <div key={idx} className="flex items-center gap-2" data-testid={`author-${idx}`}>
+              <Avatar className="h-7 w-7 border border-primary/20">
+                <AvatarFallback className="bg-primary text-primary-foreground font-bold text-[10px]">
+                  {author.name.split(' ').map(n => n[0]).join('')}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium truncate" data-testid={`author-name-${idx}`}>{author.name}</p>
+                <p className="text-[10px] text-muted-foreground truncate" data-testid={`author-title-${idx}`}>{author.title}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
