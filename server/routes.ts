@@ -5,10 +5,12 @@ import fs from "fs";
 import path from "path";
 import OpenAI from "openai";
 
-const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+// Initialize OpenAI only if API key is available
+const apiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
+const openai = apiKey ? new OpenAI({
+  apiKey,
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-});
+}) : null;
 
 interface Subsection {
   id: string;
@@ -197,8 +199,12 @@ export async function registerRoutes(
   // AI Chat endpoint with streaming
   app.post("/api/chat", async (req, res) => {
     try {
+      if (!openai) {
+        return res.status(503).json({ error: "AI chat is not configured. Please set OPENAI_API_KEY." });
+      }
+
       const { messages } = req.body;
-      
+
       if (!messages || !Array.isArray(messages)) {
         return res.status(400).json({ error: "Messages array required" });
       }

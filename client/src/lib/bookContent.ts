@@ -44,8 +44,8 @@ export const bookContent: Chapter[] = [
   },
   {
     id: "chapter-1",
-    title: "Chapter 1",
-    subtitle: "AI Fundamentals for Leaders",
+    title: "1 · Know Your AI",
+    subtitle: "What agents are and why they matter",
     description: "The simple truth about the AI landscape: from chatbots to digital workers.",
     content: `
       <h3>The New Way of Working</h3>
@@ -88,8 +88,8 @@ export const bookContent: Chapter[] = [
   },
   {
     id: "chapter-2",
-    title: "Chapter 2",
-    subtitle: "From Chatbots to Digital Workers",
+    title: "2 · Context is King",
+    subtitle: "The master key to AI effectiveness",
     description: "Moving beyond simple chats to AI that can take action.",
     content: `
       <h3>Meet Your New Digital Team</h3>
@@ -128,8 +128,8 @@ export const bookContent: Chapter[] = [
   },
   {
     id: "chapter-3",
-    title: "Chapter 3",
-    subtitle: "Design Your AI Agent Workforce",
+    title: "3 · The Right Mind for the Task",
+    subtitle: "Matching agents to your needs",
     description: "Identify which AI agents you need, define their roles, and build your personal AI team.",
     content: `
       <h3>Auditing Your Workflow</h3>
@@ -172,8 +172,8 @@ export const bookContent: Chapter[] = [
   },
   {
     id: "chapter-4",
-    title: "Chapter 4",
-    subtitle: "Master AI Agent Org Charts",
+    title: "4 · Audit. Automate. Amplify.",
+    subtitle: "A systematic adoption process",
     description: "Create organizational structures for your AI agents just like a human team.",
     content: `
       <h3>Designing the Hierarchy</h3>
@@ -216,8 +216,8 @@ export const bookContent: Chapter[] = [
   },
   {
     id: "chapter-5",
-    title: "Chapter 5",
-    subtitle: "AI Agent Delegation & Management",
+    title: "5 · Master the Transition",
+    subtitle: "Seamless human-AI handoffs",
     description: "Apply proven delegation principles to AI agents, monitor performance, and optimize.",
     content: `
       <h3>Managing Your Digital Staff</h3>
@@ -253,8 +253,8 @@ export const bookContent: Chapter[] = [
   },
   {
     id: "chapter-6",
-    title: "Chapter 6",
-    subtitle: "AI Agents for Time Mastery",
+    title: "6 · Aligned Decisions at Scale",
+    subtitle: "AI-powered judgment",
     description: "Deploy AI agents to handle scheduling, communications, and reclaim your time.",
     content: `
       <h3>Reclaiming Your Most Valuable Asset</h3>
@@ -287,8 +287,8 @@ export const bookContent: Chapter[] = [
   },
   {
     id: "chapter-7",
-    title: "Chapter 7",
-    subtitle: "AI Agents for Decision Intelligence",
+    title: "7 · Clone Your Best Self",
+    subtitle: "Multiply your presence and impact",
     description: "Use AI agents to analyze scenarios, challenge assumptions, and support better decisions.",
     content: `
       <h3>Data-Driven Decisions on Autopilot</h3>
@@ -320,8 +320,8 @@ export const bookContent: Chapter[] = [
   },
   {
     id: "chapter-8",
-    title: "Chapter 8",
-    subtitle: "Strategic Planning & Execution",
+    title: "8 · Collaborate, Don't Abdicate",
+    subtitle: "Partner without losing control",
     description: "Deploy agents to track goals, monitor progress, and drive initiatives forward.",
     content: `
       <h3>Turning Strategy into Action</h3>
@@ -350,8 +350,8 @@ export const bookContent: Chapter[] = [
   },
   {
     id: "chapter-9",
-    title: "Chapter 9",
-    subtitle: "Collaborative Human-AI Ecosystem",
+    title: "9 · Architect the Future Org",
+    subtitle: "Scale AI across your organization",
     description: "Design seamless collaboration between humans and AI agents.",
     content: `
       <h3>Humans and Machines, Working Together</h3>
@@ -382,8 +382,8 @@ export const bookContent: Chapter[] = [
   },
   {
     id: "chapter-10",
-    title: "Chapter 10",
-    subtitle: "Leading Organizations in the Agent Era",
+    title: "10 · The Price of Power",
+    subtitle: "Ethics, governance & responsibility",
     description: "Navigate organizational adoption, design enterprise architectures, and manage change.",
     content: `
       <h3>Scaling Up: The Enterprise Agent Strategy</h3>
@@ -417,78 +417,11 @@ export const bookContent: Chapter[] = [
     keywords: ["enterprise", "scaling", "change-management", "culture", "governance"],
     status: "completed"
   },
-  {
-    id: "chapter-11",
-    title: "Chapter 11",
-    subtitle: "Ethics, Governance & Responsibility",
-    description: "Establish ethical guidelines, security protocols, and frameworks for responsible deployment.",
-    content: `
-      <h3>Keeping It Safe and Ethical</h3>
-      <p>With great power comes great responsibility. Unleashing autonomous agents on your data requires guardrails.</p>
-
-      <h4>Data Privacy</h4>
-      <p>Rule #1: Know where your data is going. Are you using a public model that trains on your data? Or a private instance? Never put sensitive PII (Personally Identifiable Information) or trade secrets into a public, unsecured agent.</p>
-
-      <h4>Bias and Fairness</h4>
-      <p>Agents learn from data. If your historical hiring data is biased, your "Recruiter Agent" will be biased. You must audit your agents for fairness regularly.</p>
-
-      <h4>Transparency</h4>
-      <p>The "Bot Disclosure" rule: If a human is talking to a bot, they should know it. Don't trick customers into thinking an agent is a human. It erodes trust.</p>
-
-      <h4>The Kill Switch</h4>
-      <p>Always have a way to shut it down instantly. If an agent starts emailing the wrong people, you need a big red "Stop" button.</p>
-    `,
-    topics: [
-      "Agent governance frameworks",
-      "Data privacy and security",
-      "Ethical considerations",
-      "Transparency and disclosure",
-      "Fail-safes and kill switches"
-    ],
-    keywords: ["ethics", "governance", "security", "privacy", "compliance"],
-    status: "completed"
-  },
-  {
-    id: "chapter-12",
-    title: "Chapter 12",
-    subtitle: "Future-Proofing with Advanced Systems",
-    description: "Prepare for the evolution of AI agents, multi-agent systems, and AGI.",
-    content: `
-      <h3>Where We Are Going</h3>
-      <p>We are just at the beginning. Today's agents are like the first iPhones. Clunky, but revolutionary. What's coming next?</p>
-
-      <h4>Multi-Agent Swarms</h4>
-      <p>Soon, agents will talk to other agents outside your company. Your "Buying Agent" will negotiate directly with a supplier's "Selling Agent" to get the best price for office supplies, without either human involved.</p>
-
-      <h4>AGI (Artificial General Intelligence)</h4>
-      <p>As models get smarter, agents will handle more ambiguity. They won't just follow plans; they will <em>create</em> plans.</p>
-
-      <h4>The Human Edge</h4>
-      <p>In a world of infinite AI labor, what becomes scarce?
-      <br/>
-      <strong>Empathy. Creativity. Leadership. Strategy.</strong>
-      <br/>
-      The leaders who thrive won't be the ones who compete with machines. They will be the ones who conduct the orchestra.</p>
-
-      <div class="callout">
-        <strong>Final Thought:</strong> The future belongs to the "Centaurs"—half human, half AI. Build your other half today.
-      </div>
-    `,
-    topics: [
-      "Evolution of agent capabilities",
-      "Multi-agent coordination",
-      "Swarm intelligence",
-      "The future workplace",
-      "Maintaining the human edge"
-    ],
-    keywords: ["future-proofing", "multi-agent", "swarm", "AGI", "evolution"],
-    status: "completed"
-  },
   // Appendices
   {
     id: "appendix-a-glossary",
-    title: "Appendix A",
-    subtitle: "Glossary of AI Terms",
+    title: "A · Glossary of AI Terms",
+    subtitle: "Key definitions and terminology",
     description: "Comprehensive definitions of AI terminology used throughout this book.",
     content: "",
     topics: ["Definitions", "Terminology", "Reference"],
@@ -497,8 +430,8 @@ export const bookContent: Chapter[] = [
   },
   {
     id: "appendix-b-platform-comparison",
-    title: "Appendix B",
-    subtitle: "AI Agent Platform Comparison",
+    title: "B · Platform Comparison",
+    subtitle: "Models, tools & pricing guide",
     description: "Current comparison of AI models, platforms, and tools with December 2025 pricing.",
     content: "",
     topics: ["Platforms", "Pricing", "Models", "Tools"],
@@ -507,8 +440,8 @@ export const bookContent: Chapter[] = [
   },
   {
     id: "appendix-c-prompt-templates",
-    title: "Appendix C",
-    subtitle: "Prompt Engineering Templates",
+    title: "C · Prompt Templates",
+    subtitle: "Ready-to-use prompts",
     description: "Ready-to-use prompt templates for common AI agent tasks.",
     content: "",
     topics: ["Prompts", "Templates", "Examples"],
@@ -517,8 +450,8 @@ export const bookContent: Chapter[] = [
   },
   {
     id: "appendix-d-workflow-checklists",
-    title: "Appendix D",
-    subtitle: "Workflow Design Checklists",
+    title: "D · Workflow Checklists",
+    subtitle: "Implementation guides",
     description: "Comprehensive checklists for designing, implementing, and monitoring AI workflows.",
     content: "",
     topics: ["Checklists", "Workflows", "Implementation"],
@@ -527,8 +460,8 @@ export const bookContent: Chapter[] = [
   },
   {
     id: "appendix-e-agent-role-templates",
-    title: "Appendix E",
-    subtitle: "Agent Role Templates",
+    title: "E · Agent Role Templates",
+    subtitle: "System prompts & configurations",
     description: "Role templates and system prompts for common AI agent positions.",
     content: "",
     topics: ["Roles", "Templates", "System Prompts"],
@@ -537,8 +470,8 @@ export const bookContent: Chapter[] = [
   },
   {
     id: "appendix-f-measurement-roi",
-    title: "Appendix F",
-    subtitle: "Measurement & ROI Frameworks",
+    title: "F · Measurement & ROI",
+    subtitle: "KPIs and performance metrics",
     description: "Formulas, KPIs, and templates for measuring AI agent performance and ROI.",
     content: "",
     topics: ["Metrics", "ROI", "KPIs", "Measurement"],
@@ -547,8 +480,8 @@ export const bookContent: Chapter[] = [
   },
   {
     id: "appendix-g-governance-templates",
-    title: "Appendix G",
-    subtitle: "AI Governance Policy Templates",
+    title: "G · Governance Policies",
+    subtitle: "Templates for responsible AI",
     description: "Policy templates for responsible AI governance in your organization.",
     content: "",
     topics: ["Governance", "Policies", "Compliance"],
@@ -557,8 +490,8 @@ export const bookContent: Chapter[] = [
   },
   {
     id: "appendix-h-risk-assessment",
-    title: "Appendix H",
-    subtitle: "Risk Assessment Frameworks",
+    title: "H · Risk Assessment",
+    subtitle: "Identify and mitigate AI risks",
     description: "Frameworks and tools for identifying and mitigating AI deployment risks.",
     content: "",
     topics: ["Risk", "Assessment", "Mitigation"],
@@ -567,8 +500,8 @@ export const bookContent: Chapter[] = [
   },
   {
     id: "appendix-i-resources",
-    title: "Appendix I",
-    subtitle: "Recommended Resources",
+    title: "I · Resources",
+    subtitle: "Books, courses & communities",
     description: "Curated books, courses, newsletters, podcasts, and communities for continued learning.",
     content: "",
     topics: ["Resources", "Learning", "Books", "Courses"],
@@ -577,8 +510,8 @@ export const bookContent: Chapter[] = [
   },
   {
     id: "appendix-j-case-study-index",
-    title: "Appendix J",
-    subtitle: "Case Study Index",
+    title: "J · Case Study Index",
+    subtitle: "Examples from the book",
     description: "Reference index to all case studies and examples used throughout the book.",
     content: "",
     topics: ["Case Studies", "Examples", "Index"],

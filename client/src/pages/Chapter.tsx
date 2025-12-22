@@ -86,7 +86,8 @@ export default function Chapter() {
             }
           }, 100);
         })
-        .catch(() => {
+        .catch((err) => {
+          console.error('Failed to load chapter content:', chapterId, err);
           setFullContent(null);
           setLoading(false);
         });
@@ -167,13 +168,19 @@ export default function Chapter() {
                     <Loader2 className="w-8 h-8 animate-spin text-primary" />
                     <span className="ml-3 text-muted-foreground">Loading chapter content...</span>
                   </div>
-                ) : (
-                  <article 
+                ) : displayContent ? (
+                  <article
                     className="chapter-content max-w-none"
                     data-testid="chapter-content"
                   >
                      <div dangerouslySetInnerHTML={{ __html: displayContent }} />
                   </article>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-20 text-center">
+                    <AlertTriangle className="w-10 h-10 text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">Content could not be loaded.</p>
+                    <p className="text-sm text-muted-foreground/70 mt-2">Please try refreshing the page.</p>
+                  </div>
                 )}
 
                 <Separator className="my-12" />
