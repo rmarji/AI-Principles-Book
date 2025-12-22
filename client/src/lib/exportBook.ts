@@ -1,5 +1,5 @@
 import { jsPDF } from 'jspdf';
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, TableOfContents, StyleLevel } from 'docx';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType } from 'docx';
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
 import { bookContent } from './bookContent';
@@ -17,11 +17,20 @@ function stripHtml(html: string): string {
   return temp.textContent || temp.innerText || '';
 }
 
-function parseMarkdownToSections(markdown: string): { type: string; text: string; level?: number }[] {
-  const sections: { type: string; text: string; level?: number }[] = [];
+interface ParsedSection {
+  type: string;
+  text: string;
+  level?: number;
+  rows?: string[][];
+}
+
+function parseMarkdownToSections(markdown: string): ParsedSection[] {
+  const sections: ParsedSection[] = [];
   const lines = markdown.split('\n');
   let currentParagraph: string[] = [];
   let inList = false;
+  let inTable = false;
+  let tableRows: string[][] = [];
 
   function flushParagraph() {
     if (currentParagraph.length > 0) {
@@ -33,8 +42,45 @@ function parseMarkdownToSections(markdown: string): { type: string; text: string
     }
   }
 
+  function flushTable() {
+    if (tableRows.length > 0) {
+      sections.push({ type: 'table', text: '', rows: tableRows });
+      tableRows = [];
+      inTable = false;
+    }
+  }
+
+  function isTableRow(line: string): boolean {
+    return line.trim().startsWith('|') && line.trim().endsWith('|');
+  }
+
+  function isTableSeparator(line: string): boolean {
+    return /^\|[\s\-:|]+\|$/.test(line.trim());
+  }
+
+  function parseTableRow(line: string): string[] {
+    return line.split('|')
+      .filter((_, i, arr) => i > 0 && i < arr.length - 1)
+      .map(cell => cell.trim()
+        .replace(/\*\*(.+?)\*\*/g, '$1')
+        .replace(/\*(.+?)\*/g, '$1')
+        .replace(/_(.+?)_/g, '$1'));
+  }
+
   for (const line of lines) {
     const trimmedLine = line.trim();
+
+    // Check for table rows
+    if (isTableRow(trimmedLine)) {
+      flushParagraph();
+      if (!isTableSeparator(trimmedLine)) {
+        inTable = true;
+        tableRows.push(parseTableRow(trimmedLine));
+      }
+      continue;
+    } else if (inTable) {
+      flushTable();
+    }
 
     if (trimmedLine.startsWith('# ')) {
       flushParagraph();
@@ -88,6 +134,7 @@ function parseMarkdownToSections(markdown: string): { type: string; text: string
     }
   }
 
+  flushTable();
   flushParagraph();
   return sections;
 }
@@ -129,14 +176,12 @@ export async function exportToPDF() {
   pdf.text('for Peak Performance', pageWidth / 2, 85, { align: 'center' });
   
   pdf.setFontSize(12);
-  let authorY = 110;
-  for (const author of AUTHORS) {
-    pdf.setFont('helvetica', 'bold');
-    pdf.text(author.name, pageWidth / 2, authorY, { align: 'center' });
-    pdf.setFont('helvetica', 'normal');
-    pdf.text(author.title, pageWidth / 2, authorY + 8, { align: 'center' });
-    authorY += 22;
-  }
+  const authorNames = AUTHORS.map(a => a.name).join(' & ');
+  const authorTitles = AUTHORS.map(a => a.title).join(' | ');
+  pdf.setFont('helvetica', 'bold');
+  pdf.text(authorNames, pageWidth / 2, 110, { align: 'center' });
+  pdf.setFont('helvetica', 'normal');
+  pdf.text(authorTitles, pageWidth / 2, 120, { align: 'center' });
 
   // Table of Contents
   pdf.addPage();
@@ -190,6 +235,15 @@ export async function exportToPDF() {
       }
 
       if (section.type === 'heading') {
+        // Add extra spacing above headings based on level
+        const spacingAbove = section.level === 1 ? 12 : section.level === 2 ? 10 : 8;
+        yPosition += spacingAbove;
+        
+        if (yPosition > pageHeight - 30) {
+          pdf.addPage();
+          yPosition = 20;
+        }
+        
         const headingSize = section.level === 1 ? 16 : section.level === 2 ? 14 : section.level === 3 ? 12 : 11;
         pdf.setFont('helvetica', 'bold');
         pdf.setFontSize(headingSize);
@@ -202,7 +256,7 @@ export async function exportToPDF() {
           pdf.text(line, margin, yPosition);
           yPosition += headingSize * 0.5 + 2;
         });
-        yPosition += 4;
+        yPosition += 6;
       } else if (section.type === 'listItem') {
         pdf.setFont('helvetica', 'normal');
         pdf.setFontSize(10);
@@ -234,6 +288,54 @@ export async function exportToPDF() {
         pdf.setDrawColor(200, 200, 200);
         pdf.line(margin, yPosition, pageWidth - margin, yPosition);
         yPosition += 8;
+      } else if (section.type === 'table' && section.rows) {
+        // Render table as formatted text
+        yPosition += 6;
+        pdf.setFontSize(9);
+        
+        const rows = section.rows;
+        const colCount = rows[0]?.length || 0;
+        const colWidth = maxWidth / colCount;
+        
+        rows.forEach((row, rowIdx) => {
+          // Header row in bold
+          if (rowIdx === 0) {
+            pdf.setFont('helvetica', 'bold');
+          } else {
+            pdf.setFont('helvetica', 'normal');
+          }
+          
+          // Calculate max lines needed for this row
+          const cellLines: string[][] = row.map(cell => 
+            pdf.splitTextToSize(cell, colWidth - 4)
+          );
+          const maxLines = Math.max(...cellLines.map(lines => lines.length));
+          
+          // Render each line of the row
+          for (let lineIdx = 0; lineIdx < maxLines; lineIdx++) {
+            if (yPosition > pageHeight - 30) {
+              pdf.addPage();
+              yPosition = 20;
+            }
+            
+            row.forEach((_, colIdx) => {
+              const cellX = margin + (colIdx * colWidth);
+              const lineText = cellLines[colIdx][lineIdx] || '';
+              pdf.text(lineText, cellX, yPosition);
+            });
+            
+            yPosition += 5;
+          }
+          
+          // Draw line under header
+          if (rowIdx === 0) {
+            pdf.setDrawColor(150, 150, 150);
+            pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+            yPosition += 3;
+          }
+        });
+        
+        yPosition += 6;
       } else {
         // Regular paragraph
         pdf.setFont('helvetica', 'normal');
@@ -278,32 +380,32 @@ export async function exportToWord() {
     })
   );
 
-  // Authors
-  for (const author of AUTHORS) {
-    sections.push(
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: author.name,
-            size: 24,
-            bold: true,
-          }),
-        ],
-        alignment: AlignmentType.CENTER,
-        spacing: { after: 50 },
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: author.title,
-            size: 20,
-          }),
-        ],
-        alignment: AlignmentType.CENTER,
-        spacing: { after: 200 },
-      })
-    );
-  }
+  // Authors on same line
+  const authorNames = AUTHORS.map(a => a.name).join(' & ');
+  const authorTitles = AUTHORS.map(a => a.title).join(' | ');
+  sections.push(
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: authorNames,
+          size: 24,
+          bold: true,
+        }),
+      ],
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 50 },
+    }),
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: authorTitles,
+          size: 20,
+        }),
+      ],
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 200 },
+    })
+  );
 
   sections.push(
     new Paragraph({
@@ -374,11 +476,13 @@ export async function exportToWord() {
                             section.level === 2 ? HeadingLevel.HEADING_2 : 
                             section.level === 3 ? HeadingLevel.HEADING_3 : 
                             HeadingLevel.HEADING_4;
+        // Increased spacing before headings for better visual separation
+        const spacingBefore = section.level === 1 ? 600 : section.level === 2 ? 480 : 360;
         sections.push(
           new Paragraph({
             text: section.text,
             heading: headingLevel,
-            spacing: { before: 300, after: 150 },
+            spacing: { before: spacingBefore, after: 200 },
           })
         );
       } else if (section.type === 'paragraph') {
@@ -416,6 +520,31 @@ export async function exportToWord() {
             alignment: AlignmentType.CENTER,
             spacing: { before: 300, after: 300 },
           })
+        );
+      } else if (section.type === 'table' && section.rows && section.rows.length > 0) {
+        // Create Word table
+        const tableRows = section.rows.map((row, rowIdx) => {
+          return new TableRow({
+            children: row.map(cell => new TableCell({
+              children: [new Paragraph({
+                children: [new TextRun({
+                  text: cell,
+                  bold: rowIdx === 0,
+                })],
+              })],
+              width: { size: 100 / row.length, type: WidthType.PERCENTAGE },
+            })),
+          });
+        });
+        
+        sections.push(
+          new Table({
+            rows: tableRows,
+            width: { size: 100, type: WidthType.PERCENTAGE },
+          })
+        );
+        sections.push(
+          new Paragraph({ text: '', spacing: { after: 200 } })
         );
       } else if (section.type === 'text' && section.text) {
         sections.push(
@@ -493,11 +622,12 @@ export async function exportChapterToWord(chapterId: string) {
                           section.level === 2 ? HeadingLevel.HEADING_2 : 
                           section.level === 3 ? HeadingLevel.HEADING_3 : 
                           HeadingLevel.HEADING_4;
+      const spacingBefore = section.level === 1 ? 600 : section.level === 2 ? 480 : 360;
       sections.push(
         new Paragraph({
           text: section.text,
           heading: headingLevel,
-          spacing: { before: 300, after: 150 },
+          spacing: { before: spacingBefore, after: 200 },
         })
       );
     } else if (section.type === 'paragraph') {
@@ -535,6 +665,29 @@ export async function exportChapterToWord(chapterId: string) {
           alignment: AlignmentType.CENTER,
           spacing: { before: 300, after: 300 },
         })
+      );
+    } else if (section.type === 'table' && section.rows && section.rows.length > 0) {
+      const tableRows = section.rows.map((row, rowIdx) => {
+        return new TableRow({
+          children: row.map(cell => new TableCell({
+            children: [new Paragraph({
+              children: [new TextRun({
+                text: cell,
+                bold: rowIdx === 0,
+              })],
+            })],
+            width: { size: 100 / row.length, type: WidthType.PERCENTAGE },
+          })),
+        });
+      });
+      sections.push(
+        new Table({
+          rows: tableRows,
+          width: { size: 100, type: WidthType.PERCENTAGE },
+        })
+      );
+      sections.push(
+        new Paragraph({ text: '', spacing: { after: 200 } })
       );
     } else if (section.type === 'text' && section.text) {
       sections.push(
@@ -602,11 +755,12 @@ async function createChapterBlob(chapterId: string): Promise<{ filename: string;
                           section.level === 2 ? HeadingLevel.HEADING_2 : 
                           section.level === 3 ? HeadingLevel.HEADING_3 : 
                           HeadingLevel.HEADING_4;
+      const spacingBefore = section.level === 1 ? 600 : section.level === 2 ? 480 : 360;
       sections.push(
         new Paragraph({
           text: section.text,
           heading: headingLevel,
-          spacing: { before: 300, after: 150 },
+          spacing: { before: spacingBefore, after: 200 },
         })
       );
     } else if (section.type === 'paragraph') {
@@ -636,6 +790,37 @@ async function createChapterBlob(chapterId: string): Promise<{ filename: string;
           indent: { left: 720 },
           spacing: { before: 200, after: 200 },
         })
+      );
+    } else if (section.type === 'separator') {
+      sections.push(
+        new Paragraph({
+          text: '_______________________________________________',
+          alignment: AlignmentType.CENTER,
+          spacing: { before: 300, after: 300 },
+        })
+      );
+    } else if (section.type === 'table' && section.rows && section.rows.length > 0) {
+      const tableRows = section.rows.map((row, rowIdx) => {
+        return new TableRow({
+          children: row.map(cell => new TableCell({
+            children: [new Paragraph({
+              children: [new TextRun({
+                text: cell,
+                bold: rowIdx === 0,
+              })],
+            })],
+            width: { size: 100 / row.length, type: WidthType.PERCENTAGE },
+          })),
+        });
+      });
+      sections.push(
+        new Table({
+          rows: tableRows,
+          width: { size: 100, type: WidthType.PERCENTAGE },
+        })
+      );
+      sections.push(
+        new Paragraph({ text: '', spacing: { after: 200 } })
       );
     }
   });
