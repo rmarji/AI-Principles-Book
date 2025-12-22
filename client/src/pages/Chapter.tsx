@@ -11,7 +11,7 @@ import { marked } from "marked";
 import { QualityChecklist } from "@/components/QualityChecklist";
 import { AIDiscussion } from "@/components/AIDiscussion";
 import { CritiquePanel } from "@/components/CritiquePanel";
-
+import { exportChapterToWord } from "@/lib/exportBook";
 import { ScorecardBadge } from "@/components/ScorecardBadge";
 
 function generateSlug(text: string): string {
