@@ -1,7 +1,15 @@
 import { jsPDF } from 'jspdf';
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, TableOfContents, StyleLevel } from 'docx';
 import { saveAs } from 'file-saver';
+import JSZip from 'jszip';
 import { bookContent } from './bookContent';
+
+export const BOOK_TITLE = "The Leader's Guide to AI Teams";
+export const BOOK_SUBTITLE = "Leveraging Artificial Intelligence and AI Agents for Peak Performance";
+export const AUTHORS = [
+  { name: "Rayo Marji", title: "CTO, Arootah" },
+  { name: "Rich Bello", title: "Co-Founder, Arootah" }
+];
 
 function stripHtml(html: string): string {
   const temp = document.createElement('div');
@@ -113,7 +121,7 @@ export async function exportToPDF() {
 
   pdf.setFontSize(24);
   pdf.setFont('helvetica', 'bold');
-  pdf.text("The Leader's Guide to AI Teams", pageWidth / 2, 60, { align: 'center' });
+  pdf.text(BOOK_TITLE, pageWidth / 2, 60, { align: 'center' });
   
   pdf.setFontSize(14);
   pdf.setFont('helvetica', 'normal');
@@ -121,8 +129,35 @@ export async function exportToPDF() {
   pdf.text('for Peak Performance', pageWidth / 2, 85, { align: 'center' });
   
   pdf.setFontSize(12);
-  pdf.text('By Rayo Marji', pageWidth / 2, 110, { align: 'center' });
-  pdf.text('CTO, Arootah', pageWidth / 2, 120, { align: 'center' });
+  let authorY = 110;
+  for (const author of AUTHORS) {
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(author.name, pageWidth / 2, authorY, { align: 'center' });
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(author.title, pageWidth / 2, authorY + 8, { align: 'center' });
+    authorY += 22;
+  }
+
+  // Table of Contents
+  pdf.addPage();
+  yPosition = 30;
+  pdf.setFontSize(20);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Table of Contents', pageWidth / 2, yPosition, { align: 'center' });
+  yPosition += 20;
+
+  pdf.setFontSize(11);
+  pdf.setFont('helvetica', 'normal');
+  for (const chapter of bookContent) {
+    if (chapter.id === 'overview') continue;
+    const title = chapter.subtitle ? `${chapter.title}: ${chapter.subtitle}` : chapter.title;
+    if (yPosition > pageHeight - 30) {
+      pdf.addPage();
+      yPosition = 30;
+    }
+    pdf.text(title, margin, yPosition);
+    yPosition += 8;
+  }
 
   for (const chapter of bookContent) {
     pdf.addPage();
@@ -166,9 +201,10 @@ export async function exportToPDF() {
 export async function exportToWord() {
   const sections: any[] = [];
 
+  // Title page
   sections.push(
     new Paragraph({
-      text: "The Leader's Guide to AI Teams",
+      text: BOOK_TITLE,
       heading: HeadingLevel.TITLE,
       alignment: AlignmentType.CENTER,
       spacing: { after: 400 },
@@ -176,34 +212,71 @@ export async function exportToWord() {
     new Paragraph({
       children: [
         new TextRun({
-          text: 'Leveraging Artificial Intelligence and AI Agents for Peak Performance',
+          text: BOOK_SUBTITLE,
           size: 28,
         }),
       ],
       alignment: AlignmentType.CENTER,
-      spacing: { after: 200 },
-    }),
+      spacing: { after: 400 },
+    })
+  );
+
+  // Authors
+  for (const author of AUTHORS) {
+    sections.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: author.name,
+            size: 24,
+            bold: true,
+          }),
+        ],
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 50 },
+      }),
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: author.title,
+            size: 20,
+          }),
+        ],
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 200 },
+      })
+    );
+  }
+
+  sections.push(
     new Paragraph({
-      children: [
-        new TextRun({
-          text: 'By Rayo Marji',
-          size: 24,
-          bold: true,
-        }),
-      ],
-      alignment: AlignmentType.CENTER,
-      spacing: { after: 100 },
-    }),
+      text: '',
+      pageBreakBefore: true,
+    })
+  );
+
+  // Table of Contents
+  sections.push(
     new Paragraph({
-      children: [
-        new TextRun({
-          text: 'CTO, Arootah',
-          size: 20,
-        }),
-      ],
+      text: 'Table of Contents',
+      heading: HeadingLevel.HEADING_1,
       alignment: AlignmentType.CENTER,
-      spacing: { after: 800 },
-    }),
+      spacing: { before: 200, after: 400 },
+    })
+  );
+
+  for (const chapter of bookContent) {
+    if (chapter.id === 'overview') continue;
+    const title = chapter.subtitle ? `${chapter.title}: ${chapter.subtitle}` : chapter.title;
+    sections.push(
+      new Paragraph({
+        text: title,
+        spacing: { after: 100 },
+      })
+    );
+  }
+
+  sections.push(
     new Paragraph({
       text: '',
       pageBreakBefore: true,
@@ -316,4 +389,225 @@ export async function exportToWord() {
 
   const blob = await Packer.toBlob(doc);
   saveAs(blob, 'AI-Leadership-Guide.docx');
+}
+
+// Export a single chapter to Word
+export async function exportChapterToWord(chapterId: string) {
+  const chapter = bookContent.find(c => c.id === chapterId);
+  if (!chapter) {
+    throw new Error(`Chapter ${chapterId} not found`);
+  }
+
+  const sections: any[] = [];
+
+  // Title
+  const title = chapter.subtitle ? `${chapter.title}: ${chapter.subtitle}` : chapter.title;
+  sections.push(
+    new Paragraph({
+      text: title,
+      heading: HeadingLevel.HEADING_1,
+      spacing: { before: 400, after: 200 },
+    })
+  );
+
+  // Description
+  sections.push(
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: chapter.description,
+          italics: true,
+        }),
+      ],
+      spacing: { after: 300 },
+    })
+  );
+
+  // Content
+  let content = await fetchChapterContent(chapter.id);
+  if (!content) {
+    content = chapter.content;
+  }
+
+  const contentSections = parseMarkdownToSections(content);
+  contentSections.forEach((section) => {
+    if (section.type === 'heading') {
+      const headingLevel = section.level === 1 ? HeadingLevel.HEADING_1 :
+                          section.level === 2 ? HeadingLevel.HEADING_2 : 
+                          section.level === 3 ? HeadingLevel.HEADING_3 : 
+                          HeadingLevel.HEADING_4;
+      sections.push(
+        new Paragraph({
+          text: section.text,
+          heading: headingLevel,
+          spacing: { before: 300, after: 150 },
+        })
+      );
+    } else if (section.type === 'paragraph') {
+      sections.push(
+        new Paragraph({
+          text: section.text,
+          spacing: { after: 200 },
+        })
+      );
+    } else if (section.type === 'listItem') {
+      sections.push(
+        new Paragraph({
+          text: section.text,
+          bullet: { level: 0 },
+          spacing: { after: 80 },
+        })
+      );
+    } else if (section.type === 'blockquote') {
+      sections.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: section.text,
+              italics: true,
+            }),
+          ],
+          indent: { left: 720 },
+          spacing: { before: 200, after: 200 },
+        })
+      );
+    } else if (section.type === 'separator') {
+      sections.push(
+        new Paragraph({
+          text: '_______________________________________________',
+          alignment: AlignmentType.CENTER,
+          spacing: { before: 300, after: 300 },
+        })
+      );
+    } else if (section.type === 'text' && section.text) {
+      sections.push(
+        new Paragraph({
+          text: section.text,
+          spacing: { after: 100 },
+        })
+      );
+    }
+  });
+
+  const doc = new Document({
+    sections: [
+      {
+        properties: {},
+        children: sections,
+      },
+    ],
+  });
+
+  const blob = await Packer.toBlob(doc);
+  const filename = `${chapter.title.replace(/\s+/g, '-')}.docx`;
+  saveAs(blob, filename);
+}
+
+// Create a blob for a single chapter (used internally for zip)
+async function createChapterBlob(chapterId: string): Promise<{ filename: string; blob: Blob }> {
+  const chapter = bookContent.find(c => c.id === chapterId);
+  if (!chapter) {
+    throw new Error(`Chapter ${chapterId} not found`);
+  }
+
+  const sections: any[] = [];
+  const title = chapter.subtitle ? `${chapter.title}: ${chapter.subtitle}` : chapter.title;
+  
+  sections.push(
+    new Paragraph({
+      text: title,
+      heading: HeadingLevel.HEADING_1,
+      spacing: { before: 400, after: 200 },
+    })
+  );
+
+  sections.push(
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: chapter.description,
+          italics: true,
+        }),
+      ],
+      spacing: { after: 300 },
+    })
+  );
+
+  let content = await fetchChapterContent(chapter.id);
+  if (!content) {
+    content = chapter.content;
+  }
+
+  const contentSections = parseMarkdownToSections(content);
+  contentSections.forEach((section) => {
+    if (section.type === 'heading') {
+      const headingLevel = section.level === 1 ? HeadingLevel.HEADING_1 :
+                          section.level === 2 ? HeadingLevel.HEADING_2 : 
+                          section.level === 3 ? HeadingLevel.HEADING_3 : 
+                          HeadingLevel.HEADING_4;
+      sections.push(
+        new Paragraph({
+          text: section.text,
+          heading: headingLevel,
+          spacing: { before: 300, after: 150 },
+        })
+      );
+    } else if (section.type === 'paragraph') {
+      sections.push(
+        new Paragraph({
+          text: section.text,
+          spacing: { after: 200 },
+        })
+      );
+    } else if (section.type === 'listItem') {
+      sections.push(
+        new Paragraph({
+          text: section.text,
+          bullet: { level: 0 },
+          spacing: { after: 80 },
+        })
+      );
+    } else if (section.type === 'blockquote') {
+      sections.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: section.text,
+              italics: true,
+            }),
+          ],
+          indent: { left: 720 },
+          spacing: { before: 200, after: 200 },
+        })
+      );
+    }
+  });
+
+  const doc = new Document({
+    sections: [
+      {
+        properties: {},
+        children: sections,
+      },
+    ],
+  });
+
+  const blob = await Packer.toBlob(doc);
+  const filename = `${chapter.title.replace(/\s+/g, '-')}.docx`;
+  return { filename, blob };
+}
+
+// Export all chapters as a zip of Word documents
+export async function exportAllChaptersAsZip() {
+  const zip = new JSZip();
+
+  const chaptersToExport = bookContent.filter(c => c.id !== 'overview');
+  
+  for (const chapter of chaptersToExport) {
+    const { filename, blob } = await createChapterBlob(chapter.id);
+    zip.file(filename, blob);
+  }
+
+  const zipBlob = await zip.generateAsync({ type: 'blob' });
+  saveAs(zipBlob, 'AI-Leadership-Guide-Chapters.zip');
 }
