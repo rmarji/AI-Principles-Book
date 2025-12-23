@@ -13,34 +13,41 @@ export const bookContent: Chapter[] = [
   {
     id: "overview",
     title: "Book Overview",
-    description: "A practical guide for leaders to get real work done with AI.",
+    description: "The definitive playbook for executives who want to 10x their output with AI agents.",
     content: `
-      <h2>The Leader's Guide to AI Teams</h2>
-      <p class="lead">A practical playbook for leaders and professionals to build a digital workforce that actually helps you get things done.</p>
+      <h2>What If You Had 20 Extra Hours Every Week?</h2>
+      <p class="lead">That's not a dream. That's what happens when you stop treating AI like software and start treating it like staff.</p>
       
-      <div class="bg-muted/30 p-6 rounded-xl border border-border my-6">
-        <h4 class="font-heading font-semibold mb-2">About the Authors</h4>
-        <p class="mb-3"><strong>Rayo Marji</strong> is the CTO of Arootah, where he leads the intersection of technology and peak performance coaching. This book distills his experience in building AI systems that empower leaders to scale their impact.</p>
-        <p class="mb-0"><strong>Rich Bello</strong> is the Co-Founder of Arootah, bringing decades of executive leadership experience to the intersection of high performance and technology.</p>
-      </div>
-
-      <p>This book isn't about code or complex algorithms. It's about a simple shift: moving from using AI as a <em>tool</em> (like a super-smart calculator) to using AI as a <em>team member</em> (like a capable digital intern).</p>
+      <p>Most executives are stuck in the "prompt treadmill" — typing questions into ChatGPT, waiting for answers, then manually doing everything themselves. <strong>That's using AI wrong.</strong></p>
       
-      <p>We'll show you how to build your own "AI workforce" to handle research, scheduling, and analysis, giving you back hours every day to focus on leading.</p>
+      <p>The leaders who are pulling ahead? They've built <em>AI agent teams</em> — digital workers who handle research, scheduling, analysis, and execution <strong>while they sleep.</strong></p>
 
-      <h3>What We'll Cover</h3>
+      <h3>This Book Will Transform How You Work</h3>
+      <p>In 10 chapters, you'll go from AI-curious to AI-commanding. No coding required. No technical jargon. Just a proven system for building your own high-performing digital workforce.</p>
+      
       <ul>
-        <li><strong>The Basics:</strong> Understanding what AI can actually do for you today.</li>
-        <li><strong>From Tools to Teammates:</strong> How to stop typing prompts and start delegating tasks.</li>
-        <li><strong>Your First AI Hires:</strong> Building simple agents for research and scheduling.</li>
-        <li><strong>Managing Your Digital Team:</strong> How to give good instructions and check their work.</li>
-        <li><strong>Productivity Wins:</strong> Practical ways to save 20+ hours a week.</li>
-        <li><strong>Better Decisions:</strong> Using AI to check your blind spots.</li>
-        <li><strong>Working Together:</strong> How humans and AI work best side-by-side.</li>
+        <li><strong>Chapter 1-3:</strong> Master the mindset shift from "using tools" to "managing talent"</li>
+        <li><strong>Chapter 4-6:</strong> Build your first AI agents for scheduling, research, and communication</li>
+        <li><strong>Chapter 7-8:</strong> Create decision-support systems that catch your blind spots</li>
+        <li><strong>Chapter 9-10:</strong> Scale AI across your entire organization</li>
       </ul>
+
+      <h3>Who This Book Is For</h3>
+      <p>This is written for <strong>busy executives, founders, and leaders</strong> who:</p>
+      <ul>
+        <li>Feel like AI is moving too fast to keep up</li>
+        <li>Want productivity gains without learning to code</li>
+        <li>Are ready to delegate — not just to humans, but to machines</li>
+        <li>Need practical frameworks, not theoretical fluff</li>
+      </ul>
+
+      <h3>The Arootah Advantage</h3>
+      <p>This book is built on <strong>Arootah's proven methodology</strong> — the same frameworks used by hedge fund managers, Fortune 500 executives, and elite performers to maximize output while minimizing burnout.</p>
+      
+      <p>We've taken everything we know about peak performance coaching and applied it to AI adoption. The result? A system any leader can follow to build their own AI workforce in weeks, not months.</p>
     `,
     topics: ["Overview", "Core Themes", "Strategy"],
-    keywords: ["playbook", "AI workforce", "productivity"],
+    keywords: ["playbook", "AI workforce", "productivity", "executive", "leadership"],
     status: "completed"
   },
   {
