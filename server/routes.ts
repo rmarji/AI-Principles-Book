@@ -4,6 +4,10 @@ import { storage } from "./storage";
 import fs from "fs";
 import path from "path";
 import OpenAI from "openai";
+import Anthropic from "@anthropic-ai/sdk";
+import { db } from "./db";
+import { critiques, critiqueFindings } from "@shared/schema";
+import { eq, desc } from "drizzle-orm";
 
 // Initialize OpenAI only if API key is available
 const apiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
@@ -11,6 +15,66 @@ const openai = apiKey ? new OpenAI({
   apiKey,
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
 }) : null;
+
+// Initialize Anthropic/Claude
+const anthropic = new Anthropic({
+  apiKey: process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY,
+  baseURL: process.env.AI_INTEGRATIONS_ANTHROPIC_BASE_URL,
+});
+
+// Critique perspective definitions
+const CRITIQUE_PERSPECTIVES = {
+  executive_editor: {
+    name: "Executive Editor",
+    icon: "Edit3",
+    color: "blue",
+    prompt: `You are a senior Executive Editor at a major business publisher. Analyze this chapter for:
+- Structure and flow (does the narrative arc work?)
+- Clarity of arguments and key takeaways
+- Writing quality (wordiness, redundancy, passive voice)
+- Chapter length and pacing (target: 10,000-11,000 words)
+- Opening hook and closing call-to-action strength
+- Consistency with the book's overall voice and style`
+  },
+  marketing_strategist: {
+    name: "Marketing Strategist",
+    icon: "TrendingUp",
+    color: "green",
+    prompt: `You are a Marketing Strategist specializing in business books. Analyze this chapter for:
+- Hook strength and reader engagement potential
+- Quotable moments and shareable insights
+- Value proposition clarity (what does the reader GET from this?)
+- Competitive differentiation (how is this different from other AI books?)
+- Target audience alignment (busy executives who need practical guidance)
+- Call-to-action effectiveness and next steps`
+  },
+  subject_matter_expert: {
+    name: "AI/Tech Expert",
+    icon: "Brain",
+    color: "purple",
+    prompt: `You are a Senior AI/Technology Expert and consultant. Analyze this chapter for:
+- Technical accuracy of AI concepts and terminology
+- Practical applicability of the advice given
+- Current relevance (is this advice up-to-date for 2025?)
+- Missing important considerations or edge cases
+- Balance between simplification and accuracy
+- Credibility of examples and case studies`
+  },
+  reader_advocate: {
+    name: "Reader Experience",
+    icon: "User",
+    color: "orange",
+    prompt: `You are a Reader Experience Advocate representing the target audience (busy executives, non-technical). Analyze this chapter for:
+- Accessibility (can a non-technical leader understand this?)
+- Actionability (can they implement this immediately?)
+- Engagement (is this interesting or boring?)
+- Overwhelm factor (too much information at once?)
+- Motivation and inspiration (do they feel empowered?)
+- Practical examples and real-world scenarios`
+  }
+};
+
+type PerspectiveKey = keyof typeof CRITIQUE_PERSPECTIVES;
 
 interface Subsection {
   id: string;
@@ -193,6 +257,308 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error listing critiques:", error);
       res.status(500).json({ error: "Failed to list critiques" });
+    }
+  });
+
+  // Get available critique perspectives
+  app.get("/api/critique/perspectives", async (_req, res) => {
+    const perspectives = Object.entries(CRITIQUE_PERSPECTIVES).map(([key, value]) => ({
+      id: key,
+      name: value.name,
+      icon: value.icon,
+      color: value.color
+    }));
+    res.json({ perspectives });
+  });
+
+  // Get AI critiques for a chapter
+  app.get("/api/critique/chapter/:chapterId", async (req, res) => {
+    try {
+      const { chapterId } = req.params;
+      
+      const chapterCritiques = await db.select().from(critiques)
+        .where(eq(critiques.chapterId, chapterId))
+        .orderBy(desc(critiques.createdAt));
+      
+      if (chapterCritiques.length === 0) {
+        return res.json({ critiques: [], findings: [] });
+      }
+
+      const latestCritique = chapterCritiques[0];
+      const findings = await db.select().from(critiqueFindings)
+        .where(eq(critiqueFindings.critiqueId, latestCritique.id));
+
+      res.json({ 
+        critique: latestCritique, 
+        findings: findings,
+        history: chapterCritiques 
+      });
+    } catch (error) {
+      console.error("Error fetching critiques:", error);
+      res.status(500).json({ error: "Failed to fetch critiques" });
+    }
+  });
+
+  // Generate AI critique for a chapter
+  app.post("/api/critique/generate", async (req, res) => {
+    try {
+      const { chapterId, perspectives: selectedPerspectives } = req.body;
+
+      if (!chapterId || !selectedPerspectives || !Array.isArray(selectedPerspectives)) {
+        return res.status(400).json({ error: "chapterId and perspectives array required" });
+      }
+
+      // Validate perspectives
+      const validPerspectives = selectedPerspectives.filter(
+        (p: string) => p in CRITIQUE_PERSPECTIVES
+      ) as PerspectiveKey[];
+
+      if (validPerspectives.length === 0) {
+        return res.status(400).json({ error: "No valid perspectives provided" });
+      }
+
+      // Load chapter content
+      const chapterPath = path.join(process.cwd(), "content", "chapters", `${chapterId}.md`);
+      const appendixPath = path.join(process.cwd(), "content", "appendices", `${chapterId}.md`);
+      
+      let content = "";
+      if (fs.existsSync(chapterPath)) {
+        content = fs.readFileSync(chapterPath, "utf-8");
+      } else if (fs.existsSync(appendixPath)) {
+        content = fs.readFileSync(appendixPath, "utf-8");
+      } else {
+        return res.status(404).json({ error: "Chapter not found" });
+      }
+
+      // Create critique record
+      const [critiqueRecord] = await db.insert(critiques).values({
+        chapterId,
+        perspectives: validPerspectives,
+        status: "generating"
+      }).returning();
+
+      // Set up SSE for streaming progress
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+
+      const sendEvent = (event: object) => {
+        res.write(`data: ${JSON.stringify(event)}\n\n`);
+      };
+
+      sendEvent({ type: "started", critiqueId: critiqueRecord.id, totalPerspectives: validPerspectives.length });
+
+      const allFindings: typeof critiqueFindings.$inferSelect[] = [];
+
+      // Generate critique for each perspective
+      for (let i = 0; i < validPerspectives.length; i++) {
+        const perspectiveKey = validPerspectives[i];
+        const perspective = CRITIQUE_PERSPECTIVES[perspectiveKey];
+
+        sendEvent({ 
+          type: "perspective_started", 
+          perspective: perspectiveKey, 
+          name: perspective.name,
+          index: i + 1,
+          total: validPerspectives.length
+        });
+
+        try {
+          const systemPrompt = `${perspective.prompt}
+
+You are analyzing a chapter from "The Leader's Guide to AI Teams" by Rayo Marji and Rich Bello.
+
+Provide your critique as a JSON array of findings. Each finding should have:
+- category: A category like "Structure", "Clarity", "Engagement", "Accuracy", "Actionability", etc.
+- title: A brief title for the issue (under 10 words)
+- description: Detailed explanation of the issue (2-3 sentences)
+- suggestion: Specific recommendation for improvement (1-2 sentences)
+- priority: "high", "medium", or "low"
+- sectionReference: The heading or section this refers to (if applicable)
+
+Return ONLY valid JSON array, no markdown formatting, no explanation text.
+Example: [{"category":"Structure","title":"Weak opening hook","description":"The chapter starts with definitions rather than a compelling story or problem.","suggestion":"Begin with a real executive's story about AI adoption challenges.","priority":"high","sectionReference":"Introduction"}]`;
+
+          const response = await anthropic.messages.create({
+            model: "claude-sonnet-4-5",
+            max_tokens: 4096,
+            messages: [
+              { role: "user", content: `Analyze this chapter:\n\n${content}` }
+            ],
+            system: systemPrompt
+          });
+
+          const textContent = response.content.find(c => c.type === "text");
+          if (textContent && textContent.type === "text") {
+            try {
+              // Robust JSON parsing function with multiple fallback strategies
+              function parseRobustJSON(rawText: string): any[] {
+                let jsonStr = rawText.trim();
+                
+                // Step 1: Remove markdown code fences
+                if (jsonStr.includes("```")) {
+                  const jsonMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+                  if (jsonMatch) {
+                    jsonStr = jsonMatch[1].trim();
+                  } else {
+                    jsonStr = jsonStr.replace(/```json?\s*/g, "").replace(/```\s*/g, "").trim();
+                  }
+                }
+                
+                // Step 2: Extract just the JSON array
+                const arrayStart = jsonStr.indexOf("[");
+                const arrayEnd = jsonStr.lastIndexOf("]");
+                if (arrayStart !== -1 && arrayEnd !== -1 && arrayEnd > arrayStart) {
+                  jsonStr = jsonStr.slice(arrayStart, arrayEnd + 1);
+                }
+                
+                // Step 3: Clean up common JSON issues
+                jsonStr = jsonStr
+                  .replace(/[\u2018\u2019]/g, "'")  // Smart single quotes
+                  .replace(/[\u201C\u201D]/g, '"')  // Smart double quotes
+                  .replace(/,\s*}/g, '}')           // Trailing commas before }
+                  .replace(/,\s*]/g, ']');          // Trailing commas before ]
+                
+                // Try parsing the cleaned JSON
+                try {
+                  return JSON.parse(jsonStr);
+                } catch (e) {
+                  // Fallback: Extract individual objects using balanced brace matching
+                  const findings: any[] = [];
+                  let depth = 0;
+                  let objectStart = -1;
+                  
+                  for (let i = 0; i < jsonStr.length; i++) {
+                    const char = jsonStr[i];
+                    if (char === '{') {
+                      if (depth === 0) objectStart = i;
+                      depth++;
+                    } else if (char === '}') {
+                      depth--;
+                      if (depth === 0 && objectStart !== -1) {
+                        const objectStr = jsonStr.slice(objectStart, i + 1);
+                        try {
+                          const obj = JSON.parse(objectStr);
+                          if (obj && (obj.title || obj.description || obj.category)) {
+                            findings.push(obj);
+                          }
+                        } catch {
+                          // Try with additional cleanup
+                          try {
+                            const cleaned = objectStr
+                              .replace(/:\s*"([^"]*)"([^,}\s])/g, ': "$1"$2') // Fix missing escapes
+                              .replace(/\n/g, '\\n');
+                            const obj = JSON.parse(cleaned);
+                            if (obj && (obj.title || obj.description || obj.category)) {
+                              findings.push(obj);
+                            }
+                          } catch {
+                            // Skip unparseable object
+                          }
+                        }
+                        objectStart = -1;
+                      }
+                    }
+                  }
+                  
+                  if (findings.length > 0) return findings;
+                  throw e; // Re-throw if no findings recovered
+                }
+              }
+              
+              const findings = parseRobustJSON(textContent.text);
+              
+              if (Array.isArray(findings) && findings.length > 0) {
+                for (const finding of findings) {
+                  const [savedFinding] = await db.insert(critiqueFindings).values({
+                    critiqueId: critiqueRecord.id,
+                    perspective: perspectiveKey,
+                    category: finding.category || "General",
+                    title: finding.title || "Untitled Finding",
+                    description: finding.description || "",
+                    suggestion: finding.suggestion || null,
+                    priority: ["high", "medium", "low"].includes(finding.priority) ? finding.priority : "medium",
+                    sectionReference: finding.sectionReference || null,
+                    status: "pending"
+                  }).returning();
+
+                  allFindings.push(savedFinding);
+                }
+
+                sendEvent({
+                  type: "perspective_complete",
+                  perspective: perspectiveKey,
+                  findingsCount: findings.length
+                });
+              } else {
+                sendEvent({
+                  type: "perspective_complete",
+                  perspective: perspectiveKey,
+                  findingsCount: 0,
+                  warning: "No findings extracted"
+                });
+              }
+            } catch (parseError) {
+              console.error("Failed to parse critique JSON:", parseError, textContent.text.slice(0, 200));
+              sendEvent({
+                type: "perspective_error",
+                perspective: perspectiveKey,
+                error: "Failed to parse AI response - please try again"
+              });
+            }
+          }
+        } catch (aiError) {
+          console.error("AI critique error:", aiError);
+          sendEvent({
+            type: "perspective_error",
+            perspective: perspectiveKey,
+            error: aiError instanceof Error ? aiError.message : "AI generation failed"
+          });
+        }
+      }
+
+      // Update critique status
+      await db.update(critiques)
+        .set({ status: "completed" })
+        .where(eq(critiques.id, critiqueRecord.id));
+
+      sendEvent({
+        type: "complete",
+        critiqueId: critiqueRecord.id,
+        totalFindings: allFindings.length
+      });
+
+      res.end();
+    } catch (error) {
+      console.error("Critique generation error:", error);
+      if (res.headersSent) {
+        res.write(`data: ${JSON.stringify({ type: "error", error: "Critique generation failed" })}\n\n`);
+        res.end();
+      } else {
+        res.status(500).json({ error: "Failed to generate critique" });
+      }
+    }
+  });
+
+  // Update finding status (approve/reject)
+  app.patch("/api/critique/finding/:findingId", async (req, res) => {
+    try {
+      const { findingId } = req.params;
+      const { status } = req.body;
+
+      if (!["pending", "approved", "rejected", "addressed"].includes(status)) {
+        return res.status(400).json({ error: "Invalid status" });
+      }
+
+      const [updated] = await db.update(critiqueFindings)
+        .set({ status })
+        .where(eq(critiqueFindings.id, parseInt(findingId)))
+        .returning();
+
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating finding:", error);
+      res.status(500).json({ error: "Failed to update finding" });
     }
   });
 

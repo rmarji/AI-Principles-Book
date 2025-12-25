@@ -11,6 +11,7 @@ import { marked } from "marked";
 import { QualityChecklist } from "@/components/QualityChecklist";
 import { AIDiscussion } from "@/components/AIDiscussion";
 import { CritiquePanel } from "@/components/CritiquePanel";
+import { AICritiquePanel } from "@/components/AICritiquePanel";
 import { exportChapterToWord } from "@/lib/exportBook";
 import { ScorecardBadge } from "@/components/ScorecardBadge";
 
@@ -38,7 +39,7 @@ function formatWordCount(count: number): string {
   return `${count}`;
 }
 
-type RightPanel = 'quality' | 'critique' | 'discussion' | null;
+type RightPanel = 'quality' | 'critique' | 'ai_critique' | 'discussion' | null;
 
 export default function Chapter() {
   const [match, params] = useRoute("/chapter/:id");
@@ -272,7 +273,7 @@ export default function Chapter() {
             </div>
 
             {/* Panel Tabs */}
-            <div className="flex border-b border-border">
+            <div className="flex border-b border-border flex-wrap">
               <button
                 onClick={() => setActiveRightPanel(activeRightPanel === 'quality' ? null : 'quality')}
                 className={`flex-1 p-2 text-xs font-medium flex items-center justify-center gap-1.5 transition-colors ${
@@ -295,7 +296,19 @@ export default function Chapter() {
                 data-testid="tab-critique"
               >
                 <AlertTriangle className="w-3.5 h-3.5" />
-                Critique
+                Review
+              </button>
+              <button
+                onClick={() => setActiveRightPanel(activeRightPanel === 'ai_critique' ? null : 'ai_critique')}
+                className={`flex-1 p-2 text-xs font-medium flex items-center justify-center gap-1.5 transition-colors ${
+                  activeRightPanel === 'ai_critique' 
+                    ? 'bg-primary/10 text-primary border-b-2 border-primary' 
+                    : 'text-muted-foreground hover:bg-muted/50'
+                }`}
+                data-testid="tab-ai-critique"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                AI Critic
               </button>
               <button
                 onClick={() => setActiveRightPanel(activeRightPanel === 'discussion' ? null : 'discussion')}
@@ -307,7 +320,7 @@ export default function Chapter() {
                 data-testid="tab-discussion"
               >
                 <MessageSquare className="w-3.5 h-3.5" />
-                AI Chat
+                Chat
               </button>
             </div>
             
@@ -351,6 +364,51 @@ export default function Chapter() {
                     }
                   }}
                 />
+              )}
+              
+              {activeRightPanel === 'ai_critique' && (
+                <div className="h-full overflow-y-auto p-4">
+                  <AICritiquePanel 
+                    chapterId={chapterId || ''}
+                    onHighlightSection={(sectionRef) => {
+                      // Try multiple matching strategies
+                      const slug = sectionRef.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+                      
+                      // Strategy 1: Direct ID match
+                      let element: HTMLElement | null = document.getElementById(slug);
+                      
+                      // Strategy 2: Partial ID match
+                      if (!element) {
+                        const headings = Array.from(document.querySelectorAll('h1, h2, h3, h4'));
+                        for (const heading of headings) {
+                          if (heading.id && heading.id.includes(slug.split('-')[0])) {
+                            element = heading as HTMLElement;
+                            break;
+                          }
+                        }
+                      }
+                      
+                      // Strategy 3: Text content match
+                      if (!element) {
+                        const headings = Array.from(document.querySelectorAll('h1, h2, h3, h4'));
+                        const searchTerms = sectionRef.toLowerCase().split(/\s+/);
+                        for (const heading of headings) {
+                          const text = heading.textContent?.toLowerCase() || '';
+                          if (searchTerms.some(term => text.includes(term))) {
+                            element = heading as HTMLElement;
+                            break;
+                          }
+                        }
+                      }
+                      
+                      if (element) {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        element.classList.add('bg-yellow-200/30');
+                        setTimeout(() => element?.classList.remove('bg-yellow-200/30'), 2000);
+                      }
+                    }}
+                  />
+                </div>
               )}
               
               {activeRightPanel === 'discussion' && (
