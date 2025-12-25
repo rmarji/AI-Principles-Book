@@ -9,22 +9,22 @@ function initExportMermaid() {
     startOnLoad: false,
     theme: "default",
     themeVariables: {
-      primaryColor: "#818cf8",
-      primaryTextColor: "#1e1b4b",
-      primaryBorderColor: "#4f46e5",
-      lineColor: "#374151",
-      secondaryColor: "#c7d2fe",
-      tertiaryColor: "#e0e7ff",
+      primaryColor: "#6366f1",
+      primaryTextColor: "#000000",
+      primaryBorderColor: "#4338ca",
+      lineColor: "#1f2937",
+      secondaryColor: "#a5b4fc",
+      tertiaryColor: "#c7d2fe",
       background: "#ffffff",
-      mainBkg: "#c7d2fe",
-      nodeBorder: "#4338ca",
+      mainBkg: "#6366f1",
+      nodeBorder: "#312e81",
       clusterBkg: "#e0e7ff",
-      clusterBorder: "#a5b4fc",
-      titleColor: "#1e1b4b",
+      clusterBorder: "#6366f1",
+      titleColor: "#000000",
       edgeLabelBackground: "#ffffff",
       fontFamily: "Arial, sans-serif",
-      nodeTextColor: "#1e1b4b",
-      textColor: "#1e1b4b"
+      nodeTextColor: "#ffffff",
+      textColor: "#000000"
     },
     flowchart: {
       htmlLabels: false,
@@ -67,12 +67,31 @@ function cleanSvgForExport(svgString: string): string {
 
 export async function svgToPng(svgString: string, width: number = 600, height: number = 400): Promise<Uint8Array | null> {
   return new Promise((resolve) => {
+    const timeout = setTimeout(() => {
+      console.warn("SVG to PNG conversion timed out");
+      resolve(null);
+    }, 10000);
+    
     try {
+      if (!svgString || svgString.trim() === '') {
+        clearTimeout(timeout);
+        resolve(null);
+        return;
+      }
+      
       const cleanedSvg = cleanSvgForExport(svgString);
       
       const parser = new DOMParser();
       const doc = parser.parseFromString(cleanedSvg, 'image/svg+xml');
       const svgElement = doc.documentElement;
+      
+      const parserError = doc.querySelector('parsererror');
+      if (parserError) {
+        console.error("SVG parsing error:", parserError.textContent);
+        clearTimeout(timeout);
+        resolve(null);
+        return;
+      }
       
       let svgWidth = width;
       let svgHeight = height;
@@ -90,22 +109,12 @@ export async function svgToPng(svgString: string, width: number = 600, height: n
       const heightAttr = svgElement.getAttribute('height');
       if (widthAttr) {
         const w = parseFloat(widthAttr.replace('px', ''));
-        if (!isNaN(w)) svgWidth = w;
+        if (!isNaN(w) && w > 0) svgWidth = w;
       }
       if (heightAttr) {
         const h = parseFloat(heightAttr.replace('px', ''));
-        if (!isNaN(h)) svgHeight = h;
+        if (!isNaN(h) && h > 0) svgHeight = h;
       }
-      
-      const styleEl = doc.createElementNS('http://www.w3.org/2000/svg', 'style');
-      styleEl.textContent = `
-        text { font-family: Arial, Helvetica, sans-serif !important; }
-        .node rect, .node circle, .node ellipse, .node polygon { fill: #ffffff; stroke: #4f46e5; stroke-width: 2px; }
-        .cluster rect { fill: #f8fafc; stroke: #e2e8f0; }
-        .edgePath path { stroke: #6b7280; stroke-width: 2px; }
-        .label { color: #1f2937; }
-      `;
-      svgElement.insertBefore(styleEl, svgElement.firstChild);
       
       svgElement.setAttribute('width', String(svgWidth));
       svgElement.setAttribute('height', String(svgHeight));
@@ -120,41 +129,49 @@ export async function svgToPng(svgString: string, width: number = 600, height: n
       
       const img = new Image();
       img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const targetWidth = Math.min(svgWidth, 500);
-        const scale = targetWidth / svgWidth;
-        
-        canvas.width = svgWidth * scale;
-        canvas.height = svgHeight * scale;
-        
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          resolve(null);
-          return;
-        }
-        
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        
-        canvas.toBlob((blob) => {
-          if (blob) {
-            blob.arrayBuffer().then(buffer => {
-              resolve(new Uint8Array(buffer));
-            }).catch(() => resolve(null));
-          } else {
+        clearTimeout(timeout);
+        try {
+          const canvas = document.createElement('canvas');
+          const targetWidth = Math.min(svgWidth, 500);
+          const scale = targetWidth / svgWidth;
+          
+          canvas.width = Math.max(1, svgWidth * scale);
+          canvas.height = Math.max(1, svgHeight * scale);
+          
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
             resolve(null);
+            return;
           }
-        }, 'image/png', 0.95);
+          
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          
+          canvas.toBlob((blob) => {
+            if (blob) {
+              blob.arrayBuffer().then(buffer => {
+                resolve(new Uint8Array(buffer));
+              }).catch(() => resolve(null));
+            } else {
+              resolve(null);
+            }
+          }, 'image/png', 0.95);
+        } catch (err) {
+          console.error("Canvas drawing error:", err);
+          resolve(null);
+        }
       };
       
       img.onerror = (e) => {
+        clearTimeout(timeout);
         console.error("Failed to load SVG as image:", e);
         resolve(null);
       };
       
       img.src = dataUrl;
     } catch (err) {
+      clearTimeout(timeout);
       console.error("SVG to PNG conversion error:", err);
       resolve(null);
     }
