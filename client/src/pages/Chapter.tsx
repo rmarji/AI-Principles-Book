@@ -15,6 +15,8 @@ import { CritiquePanel } from "@/components/CritiquePanel";
 import { AICritiquePanel } from "@/components/AICritiquePanel";
 import { exportChapterToWord } from "@/lib/exportBook";
 import { ScorecardBadge } from "@/components/ScorecardBadge";
+import { MermaidDiagram } from "@/components/MermaidDiagram";
+import { getDiagramsForChapter } from "@/lib/chapterDiagrams";
 
 function generateSlug(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -197,12 +199,30 @@ export default function Chapter() {
                     <span className="ml-3 text-muted-foreground">Loading chapter content...</span>
                   </div>
                 ) : displayContent ? (
-                  <article
-                    className="chapter-content max-w-none"
-                    data-testid="chapter-content"
-                  >
-                     <div dangerouslySetInnerHTML={{ __html: displayContent }} />
-                  </article>
+                  <>
+                    <article
+                      className="chapter-content max-w-none"
+                      data-testid="chapter-content"
+                    >
+                       <div dangerouslySetInnerHTML={{ __html: displayContent }} />
+                    </article>
+                    
+                    {/* Chapter Diagrams */}
+                    {chapterId && getDiagramsForChapter(chapterId).length > 0 && (
+                      <div className="mt-12 space-y-6" data-testid="chapter-diagrams">
+                        <h2 className="text-2xl font-heading font-bold text-foreground">Visual References</h2>
+                        {getDiagramsForChapter(chapterId).map((diagram) => (
+                          <MermaidDiagram
+                            key={diagram.id}
+                            id={diagram.id}
+                            title={diagram.title}
+                            definition={diagram.definition}
+                            caption={diagram.caption}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <div className="flex flex-col items-center justify-center py-20 text-center">
                     <AlertTriangle className="w-10 h-10 text-muted-foreground mb-4" />
