@@ -261,7 +261,7 @@ export default function Assessment() {
                 </CardHeader>
                 <CardContent>
                   <RadioGroup
-                    value={answers[currentQuestion.id]?.toString()}
+                    value={answers[currentQuestion.id]?.toString() ?? ""}
                     onValueChange={(value) => handleAnswer(parseInt(value))}
                   >
                     <div className="space-y-3">
