@@ -1,9 +1,10 @@
 import { jsPDF } from 'jspdf';
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } from 'docx';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle, ImageRun } from 'docx';
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
 import { bookContent } from './bookContent';
 import { getDiagramsForChapter, type ChapterDiagram } from './chapterDiagrams';
+import { renderDiagramsToImages, type DiagramImage } from './svgToImage';
 
 export const BOOK_TITLE = "The Leader's Guide to AI Teams";
 export const BOOK_SUBTITLE = "Leveraging Artificial Intelligence and AI Agents for Peak Performance";
@@ -354,56 +355,57 @@ export async function exportToPDF() {
       }
     }
     
-    // Add diagrams for this chapter
+    // Add diagrams for this chapter as images
     const diagrams = getDiagramsForChapter(chapter.id);
     if (diagrams.length > 0) {
-      yPosition += 10;
+      const diagramImages = await renderDiagramsToImages(diagrams);
       
-      // Diagrams section header
-      if (yPosition > pageHeight - 60) {
-        pdf.addPage();
-        yPosition = 20;
-      }
-      
-      pdf.setFontSize(14);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('Visual References', margin, yPosition);
-      yPosition += 12;
-      
-      for (const diagram of diagrams) {
-        if (yPosition > pageHeight - 50) {
+      for (const diagramImg of diagramImages) {
+        // Check if we need a new page for the diagram
+        const imgHeight = 80; // Approximate height in PDF units
+        if (yPosition > pageHeight - imgHeight - 30) {
           pdf.addPage();
           yPosition = 20;
         }
-        
-        // Draw diagram box
-        pdf.setDrawColor(99, 102, 241);
-        pdf.setFillColor(248, 250, 252);
-        pdf.roundedRect(margin, yPosition - 5, maxWidth, 35, 3, 3, 'FD');
         
         // Diagram title
         pdf.setFontSize(11);
         pdf.setFont('helvetica', 'bold');
         pdf.setTextColor(99, 102, 241);
-        pdf.text(diagram.title, margin + 5, yPosition + 5);
+        pdf.text(diagramImg.title, margin, yPosition);
+        yPosition += 8;
+        
+        // Add the diagram image
+        try {
+          const base64 = btoa(Array.from(diagramImg.imageData).map(b => String.fromCharCode(b)).join(''));
+          const imgWidth = maxWidth * 0.9;
+          const imgHeightScaled = (imgWidth / diagramImg.width) * diagramImg.height;
+          
+          pdf.addImage(
+            `data:image/png;base64,${base64}`,
+            'PNG',
+            margin + (maxWidth - imgWidth) / 2,
+            yPosition,
+            imgWidth,
+            imgHeightScaled
+          );
+          yPosition += imgHeightScaled + 5;
+        } catch (err) {
+          console.error('Failed to add diagram image to PDF:', err);
+        }
         
         // Diagram caption
-        if (diagram.caption) {
+        if (diagramImg.caption) {
           pdf.setFontSize(9);
           pdf.setFont('helvetica', 'italic');
           pdf.setTextColor(100, 116, 139);
-          const captionLines = pdf.splitTextToSize(diagram.caption, maxWidth - 10);
-          pdf.text(captionLines, margin + 5, yPosition + 15);
+          const captionLines = pdf.splitTextToSize(diagramImg.caption, maxWidth - 20);
+          pdf.text(captionLines, margin + 10, yPosition);
+          yPosition += captionLines.length * 4 + 5;
         }
         
-        // Note about viewing online
-        pdf.setFontSize(8);
-        pdf.setFont('helvetica', 'normal');
-        pdf.setTextColor(148, 163, 184);
-        pdf.text('[View interactive diagram in the online version]', margin + 5, yPosition + 25);
-        
         pdf.setTextColor(0, 0, 0);
-        yPosition += 45;
+        yPosition += 10;
       }
     }
   }
@@ -411,75 +413,64 @@ export async function exportToPDF() {
   pdf.save('AI-Leadership-Guide.pdf');
 }
 
-function createDiagramParagraphs(diagrams: ChapterDiagram[]): any[] {
+async function createDiagramParagraphsWithImages(diagrams: ChapterDiagram[]): Promise<any[]> {
   const paragraphs: any[] = [];
   
   if (diagrams.length === 0) return paragraphs;
   
-  // Section header
-  paragraphs.push(
-    new Paragraph({
-      text: 'Visual References',
-      heading: HeadingLevel.HEADING_2,
-      spacing: { before: 400, after: 200 },
-    })
-  );
+  const diagramImages = await renderDiagramsToImages(diagrams);
   
-  for (const diagram of diagrams) {
+  for (const diagramImg of diagramImages) {
     // Diagram title
     paragraphs.push(
       new Paragraph({
         children: [
           new TextRun({
-            text: diagram.title,
+            text: diagramImg.title,
             bold: true,
             color: '6366f1',
             size: 22,
           }),
         ],
         spacing: { before: 200, after: 100 },
-        border: {
-          top: { style: BorderStyle.SINGLE, size: 6, color: '6366f1' },
-          bottom: { style: BorderStyle.SINGLE, size: 6, color: 'e2e8f0' },
-          left: { style: BorderStyle.SINGLE, size: 6, color: 'e2e8f0' },
-          right: { style: BorderStyle.SINGLE, size: 6, color: 'e2e8f0' },
-        },
-        shading: { fill: 'f8fafc' },
+      })
+    );
+    
+    // Image
+    paragraphs.push(
+      new Paragraph({
+        children: [
+          new ImageRun({
+            data: diagramImg.imageData,
+            transformation: {
+              width: 500,
+              height: 350,
+            },
+            type: 'png',
+          }),
+        ],
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 100, after: 100 },
       })
     );
     
     // Caption
-    if (diagram.caption) {
+    if (diagramImg.caption) {
       paragraphs.push(
         new Paragraph({
           children: [
             new TextRun({
-              text: diagram.caption,
+              text: diagramImg.caption,
               italics: true,
               size: 20,
               color: '64748b',
             }),
           ],
-          spacing: { after: 100 },
-          indent: { left: 200 },
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 200 },
         })
       );
     }
-    
-    // Note about viewing online
-    paragraphs.push(
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: '[View interactive diagram in the online version]',
-            size: 18,
-            color: '94a3b8',
-          }),
-        ],
-        spacing: { after: 200 },
-        indent: { left: 200 },
-      })
-    );
   }
   
   return paragraphs;
@@ -686,7 +677,7 @@ export async function exportToWord() {
     
     // Add diagrams for this chapter
     const diagrams = getDiagramsForChapter(chapter.id);
-    sections.push(...createDiagramParagraphs(diagrams));
+    sections.push(...await createDiagramParagraphsWithImages(diagrams));
 
     sections.push(
       new Paragraph({
@@ -833,7 +824,7 @@ export async function exportChapterToWord(chapterId: string) {
   
   // Add diagrams for this chapter
   const diagrams = getDiagramsForChapter(chapterId);
-  sections.push(...createDiagramParagraphs(diagrams));
+  sections.push(...await createDiagramParagraphsWithImages(diagrams));
 
   const doc = new Document({
     sections: [
@@ -963,7 +954,7 @@ async function createChapterBlob(chapterId: string): Promise<{ filename: string;
   
   // Add diagrams for this chapter
   const diagrams = getDiagramsForChapter(chapterId);
-  sections.push(...createDiagramParagraphs(diagrams));
+  sections.push(...await createDiagramParagraphsWithImages(diagrams));
 
   const doc = new Document({
     sections: [
