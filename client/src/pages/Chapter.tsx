@@ -5,6 +5,7 @@ import { bookContent } from "@/lib/bookContent";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { Sparkles, ArrowRight, MessageSquare, Share2, Bookmark, Brain, Loader2, FileText, ListChecks, AlertTriangle, ChevronDown, PanelRightClose, PanelRight, Download } from "lucide-react";
 import { motion } from "framer-motion";
 import { marked } from "marked";
@@ -118,9 +119,10 @@ export default function Chapter() {
 
   return (
     <ReaderLayout>
-      <div className="flex h-full">
+      <ResizablePanelGroup direction="horizontal" className="h-full">
         {/* Main Content */}
-        <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+        <ResizablePanel defaultSize={rightSidebarOpen ? 75 : 100} minSize={50}>
+          <div className="flex-1 flex flex-col h-full overflow-hidden relative">
           
           {/* Header */}
           <header className="h-16 border-b border-border bg-background/80 backdrop-blur z-10 flex items-center justify-between px-8 shrink-0">
@@ -240,7 +242,8 @@ export default function Chapter() {
               </motion.div>
             </div>
           </div>
-        </div>
+          </div>
+        </ResizablePanel>
 
         {/* Right Sidebar Toggle Button (when collapsed) */}
         {!rightSidebarOpen && (
@@ -255,9 +258,11 @@ export default function Chapter() {
           </Button>
         )}
 
-        {/* AI Assistant Context Panel - Accordion Style */}
+        {/* AI Assistant Context Panel - Resizable */}
         {rightSidebarOpen && (
-          <div className="hidden xl:flex w-80 border-l border-border bg-background flex-col shrink-0">
+          <>
+            <ResizableHandle withHandle className="hidden xl:flex" />
+            <ResizablePanel defaultSize={25} minSize={15} maxSize={50} className="hidden xl:flex flex-col border-l border-border bg-background">
             {/* Header with close button */}
             <div className="p-2 border-b border-border flex items-center justify-between bg-muted/30">
               <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tools</span>
@@ -425,9 +430,10 @@ export default function Chapter() {
                 </div>
               )}
             </div>
-          </div>
+            </ResizablePanel>
+          </>
         )}
-      </div>
+      </ResizablePanelGroup>
     </ReaderLayout>
   );
 }

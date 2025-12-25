@@ -450,27 +450,27 @@ function FindingGroup({ title, icon, findings, perspectives, getPerspectiveIcon,
             >
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Badge className={PERSPECTIVE_COLORS[finding.perspective] || "bg-muted"}>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <Badge className={`${PERSPECTIVE_COLORS[finding.perspective] || "bg-muted"} shrink-0`}>
                         <Icon className="w-3 h-3 mr-1" />
-                        {perspective?.name || finding.perspective}
+                        <span className="truncate max-w-[100px]">{perspective?.name || finding.perspective}</span>
                       </Badge>
-                      <Badge variant="outline" className="text-xs">{finding.category}</Badge>
+                      <Badge variant="outline" className="text-xs shrink-0">{finding.category}</Badge>
                     </div>
-                    <CardTitle className="text-base">{finding.title}</CardTitle>
+                    <CardTitle className="text-base break-words">{finding.title}</CardTitle>
                   </div>
-                  <Badge className={PRIORITY_COLORS[finding.priority]}>
+                  <Badge className={`${PRIORITY_COLORS[finding.priority]} shrink-0`}>
                     {finding.priority}
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent className="pt-0">
-                <p className="text-sm text-muted-foreground mb-3">{finding.description}</p>
+              <CardContent className="pt-0 overflow-hidden">
+                <p className="text-sm text-muted-foreground mb-3 break-words">{finding.description}</p>
                 
                 {finding.suggestion && (
-                  <div className="p-3 rounded-lg bg-muted/50 border border-border mb-3">
-                    <p className="text-sm">
+                  <div className="p-3 rounded-lg bg-muted/50 border border-border mb-3 overflow-hidden">
+                    <p className="text-sm break-words">
                       <span className="font-medium text-primary">Suggestion:</span> {finding.suggestion}
                     </p>
                   </div>
