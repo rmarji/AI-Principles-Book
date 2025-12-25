@@ -2,7 +2,7 @@ import { ReaderLayout } from "@/components/ReaderLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { bookContent } from "@/lib/bookContent";
-import { ArrowRight, BookOpen, Brain, Sparkles, Users, Clock, Target, Zap, CheckCircle2, Star } from "lucide-react";
+import { ArrowRight, BookOpen, Brain, Sparkles, Users, Clock, Target, Zap, CheckCircle2, Star, ClipboardCheck } from "lucide-react";
 import { Link } from "wouter";
 import coverImage from "@assets/generated_images/futuristic_book_cover_for_ai_leadership_guide.png";
 
@@ -59,6 +59,12 @@ export default function Home() {
                 <Button variant="outline" size="lg" asChild className="h-14 px-8 text-lg font-medium border-2 hover:bg-muted/50 cursor-pointer" data-testid="button-table-of-contents">
                   <Link href="/toc">
                     <BookOpen className="mr-2 w-5 h-5" /> Table of Contents
+                  </Link>
+                </Button>
+                
+                <Button variant="ghost" size="lg" asChild className="h-14 px-6 text-lg font-medium hover:bg-primary/10 cursor-pointer" data-testid="button-assessment">
+                  <Link href="/assessment">
+                    <ClipboardCheck className="mr-2 w-5 h-5 text-primary" /> AI Readiness Assessment
                   </Link>
                 </Button>
               </div>

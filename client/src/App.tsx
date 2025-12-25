@@ -8,6 +8,7 @@ import Home from "@/pages/Home";
 import Chapter from "@/pages/Chapter";
 import TableOfContents from "@/pages/TableOfContents";
 import EditorialGuidelines from "@/pages/EditorialGuidelines";
+import Assessment from "@/pages/Assessment";
 
 function AppRouter() {
   return (
@@ -17,6 +18,7 @@ function AppRouter() {
         <Route path="/toc" component={TableOfContents} />
         <Route path="/chapter/:id" component={Chapter} />
         <Route path="/editorial-guidelines" component={EditorialGuidelines} />
+        <Route path="/assessment" component={Assessment} />
         <Route component={NotFound} />
       </Switch>
     </Router>
