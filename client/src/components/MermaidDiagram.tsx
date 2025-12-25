@@ -5,26 +5,30 @@ import { Loader2 } from "lucide-react";
 
 mermaid.initialize({
   startOnLoad: false,
-  theme: "base",
+  theme: "default",
   themeVariables: {
-    primaryColor: "#6366f1",
-    primaryTextColor: "#1f2937",
+    primaryColor: "#818cf8",
+    primaryTextColor: "#1e1b4b",
     primaryBorderColor: "#4f46e5",
-    lineColor: "#6b7280",
-    secondaryColor: "#f3f4f6",
+    lineColor: "#374151",
+    secondaryColor: "#c7d2fe",
     tertiaryColor: "#e0e7ff",
     background: "#ffffff",
-    mainBkg: "#ffffff",
-    nodeBorder: "#4f46e5",
-    clusterBkg: "#f8fafc",
-    clusterBorder: "#e2e8f0",
-    titleColor: "#1f2937",
+    mainBkg: "#c7d2fe",
+    nodeBorder: "#4338ca",
+    clusterBkg: "#e0e7ff",
+    clusterBorder: "#a5b4fc",
+    titleColor: "#1e1b4b",
     edgeLabelBackground: "#ffffff",
-    fontFamily: "Inter, sans-serif"
+    fontFamily: "Arial, sans-serif",
+    nodeTextColor: "#1e1b4b",
+    textColor: "#1e1b4b"
   },
   flowchart: {
-    htmlLabels: true,
-    curve: "basis"
+    htmlLabels: false,
+    curve: "basis",
+    nodeSpacing: 50,
+    rankSpacing: 50
   }
 });
 
