@@ -211,8 +211,8 @@ export function AICritiquePanel({ chapterId, onHighlightSection }: AICritiquePan
   const groupedFindings = groupFindingsByPriority(filteredFindings);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="flex h-full flex-col gap-4">
+      <div className="flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-primary" />
           <h3 className="font-heading font-semibold">AI Critique</h3>
@@ -332,9 +332,9 @@ export function AICritiquePanel({ chapterId, onHighlightSection }: AICritiquePan
       )}
 
       {!isGenerating && critique && findings.length > 0 && (
-        <div className="space-y-4">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="w-full justify-start flex-wrap h-auto gap-1 bg-transparent p-0">
+        <div className="flex-1 min-h-0 flex flex-col">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 min-h-0 flex flex-col">
+            <TabsList className="w-full justify-start flex-wrap h-auto gap-1 bg-transparent p-0 shrink-0">
               <TabsTrigger
                 value="all"
                 className="data-[state=active]:bg-muted"
@@ -359,8 +359,8 @@ export function AICritiquePanel({ chapterId, onHighlightSection }: AICritiquePan
               })}
             </TabsList>
 
-            <TabsContent value={activeTab} className="mt-4">
-              <ScrollArea className="h-[500px] pr-4">
+            <TabsContent value={activeTab} className="mt-4 flex-1 min-h-0 flex flex-col">
+              <ScrollArea className="flex-1 min-h-0 pr-4 [&>div]:h-full [&_[data-radix-scroll-area-viewport]]:h-full">
                 <div className="space-y-6">
                   {groupedFindings.high.length > 0 && (
                     <FindingGroup

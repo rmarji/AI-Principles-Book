@@ -119,7 +119,7 @@ export default function Chapter() {
 
   return (
     <ReaderLayout>
-      <ResizablePanelGroup direction="horizontal" className="h-full">
+      <ResizablePanelGroup direction="horizontal" className="h-full min-h-0">
         {/* Main Content */}
         <ResizablePanel defaultSize={rightSidebarOpen ? 75 : 100} minSize={50}>
           <div className="flex-1 flex flex-col h-full overflow-hidden relative">
@@ -372,7 +372,7 @@ export default function Chapter() {
               )}
               
               {activeRightPanel === 'ai_critique' && (
-                <div className="h-full overflow-y-auto p-4">
+                <div className="h-full flex flex-col p-4 min-h-0">
                   <AICritiquePanel 
                     chapterId={chapterId || ''}
                     onHighlightSection={(sectionRef) => {
