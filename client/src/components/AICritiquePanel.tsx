@@ -7,7 +7,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Sparkles, Edit3, TrendingUp, Brain, User, Loader2, CheckCircle2, XCircle, ChevronDown, AlertTriangle, Info, Clock } from "lucide-react";
+import { Sparkles, Edit3, TrendingUp, Brain, User, Loader2, CheckCircle2, XCircle, ChevronDown, AlertTriangle, Info, Clock, Wand2, Settings } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Link } from "wouter";
 
 interface Perspective {
   id: string;
@@ -41,6 +43,14 @@ interface Critique {
 interface AICritiquePanelProps {
   chapterId: string;
   onHighlightSection?: (sectionId: string) => void;
+  onContentUpdated?: () => void;
+}
+
+interface FixPreview {
+  findingId: number;
+  originalSection: string;
+  revisedSection: string;
+  explanation: string;
 }
 
 const ICON_MAP: { [key: string]: React.ElementType } = {
@@ -63,7 +73,7 @@ const PERSPECTIVE_COLORS: { [key: string]: string } = {
   reader_advocate: "bg-orange-500/10 text-orange-600 border-orange-500/30"
 };
 
-export function AICritiquePanel({ chapterId, onHighlightSection }: AICritiquePanelProps) {
+export function AICritiquePanel({ chapterId, onHighlightSection, onContentUpdated }: AICritiquePanelProps) {
   const [perspectives, setPerspectives] = useState<Perspective[]>([]);
   const [selectedPerspectives, setSelectedPerspectives] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -73,6 +83,10 @@ export function AICritiquePanel({ chapterId, onHighlightSection }: AICritiquePan
   const [dialogOpen, setDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
   const [errors, setErrors] = useState<{ perspective: string; error: string }[]>([]);
+  const [fixPreview, setFixPreview] = useState<FixPreview | null>(null);
+  const [isGeneratingFix, setIsGeneratingFix] = useState<number | null>(null);
+  const [isApplyingFix, setIsApplyingFix] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchPerspectives();
@@ -186,6 +200,78 @@ export function AICritiquePanel({ chapterId, onHighlightSection }: AICritiquePan
       );
     } catch (error) {
       console.error("Failed to update finding:", error);
+    }
+  };
+
+  const generateAIFix = async (findingId: number) => {
+    setIsGeneratingFix(findingId);
+    try {
+      const res = await fetch("/api/critique/fix", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ findingId, chapterId })
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to generate fix");
+      }
+
+      const fix = await res.json();
+      setFixPreview(fix);
+    } catch (error) {
+      console.error("Failed to generate fix:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to generate AI fix",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGeneratingFix(null);
+    }
+  };
+
+  const applyFix = async () => {
+    if (!fixPreview) return;
+
+    setIsApplyingFix(true);
+    try {
+      const res = await fetch("/api/critique/apply-fix", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          findingId: fixPreview.findingId,
+          chapterId,
+          originalSection: fixPreview.originalSection,
+          revisedSection: fixPreview.revisedSection
+        })
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to apply fix");
+      }
+
+      toast({
+        title: "Fix Applied",
+        description: "The chapter has been updated with the suggested changes."
+      });
+
+      setFindings(prev =>
+        prev.map(f => f.id === fixPreview.findingId ? { ...f, status: "addressed" } : f)
+      );
+
+      setFixPreview(null);
+      onContentUpdated?.();
+    } catch (error) {
+      console.error("Failed to apply fix:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to apply fix",
+        variant: "destructive"
+      });
+    } finally {
+      setIsApplyingFix(false);
     }
   };
 
@@ -371,6 +457,8 @@ export function AICritiquePanel({ chapterId, onHighlightSection }: AICritiquePan
                       getPerspectiveIcon={getPerspectiveIcon}
                       onUpdateStatus={updateFindingStatus}
                       onHighlightSection={onHighlightSection}
+                      onGenerateFix={generateAIFix}
+                      generatingFixId={isGeneratingFix}
                     />
                   )}
                   {groupedFindings.medium.length > 0 && (
@@ -382,6 +470,8 @@ export function AICritiquePanel({ chapterId, onHighlightSection }: AICritiquePan
                       getPerspectiveIcon={getPerspectiveIcon}
                       onUpdateStatus={updateFindingStatus}
                       onHighlightSection={onHighlightSection}
+                      onGenerateFix={generateAIFix}
+                      generatingFixId={isGeneratingFix}
                     />
                   )}
                   {groupedFindings.low.length > 0 && (
@@ -393,6 +483,8 @@ export function AICritiquePanel({ chapterId, onHighlightSection }: AICritiquePan
                       getPerspectiveIcon={getPerspectiveIcon}
                       onUpdateStatus={updateFindingStatus}
                       onHighlightSection={onHighlightSection}
+                      onGenerateFix={generateAIFix}
+                      generatingFixId={isGeneratingFix}
                     />
                   )}
                 </div>
@@ -412,6 +504,77 @@ export function AICritiquePanel({ chapterId, onHighlightSection }: AICritiquePan
           </CardContent>
         </Card>
       )}
+
+      <div className="mt-auto pt-4 border-t border-border shrink-0">
+        <Link href="/editorial-guidelines">
+          <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground cursor-pointer" data-testid="link-editorial-guidelines">
+            <Settings className="w-4 h-4 mr-2" />
+            Editorial Guidelines
+          </Button>
+        </Link>
+      </div>
+
+      <Dialog open={!!fixPreview} onOpenChange={(open) => !open && setFixPreview(null)}>
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>AI-Generated Fix</DialogTitle>
+            <DialogDescription>
+              Review the proposed changes before applying them to the chapter.
+            </DialogDescription>
+          </DialogHeader>
+          {fixPreview && (
+            <div className="flex-1 overflow-hidden flex flex-col gap-4 py-4 min-h-0">
+              <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                <p className="text-sm">
+                  <span className="font-medium text-blue-600 dark:text-blue-400">Explanation:</span> {fixPreview.explanation}
+                </p>
+              </div>
+
+              <div className="flex-1 min-h-0 grid grid-cols-2 gap-4">
+                <div className="flex flex-col min-h-0">
+                  <h4 className="font-medium text-sm text-muted-foreground mb-2 shrink-0">Original Text</h4>
+                  <ScrollArea className="flex-1 min-h-0 border border-red-500/20 rounded-lg bg-red-500/5 p-4">
+                    <pre className="text-sm whitespace-pre-wrap break-words font-mono">{fixPreview.originalSection}</pre>
+                  </ScrollArea>
+                </div>
+                <div className="flex flex-col min-h-0">
+                  <h4 className="font-medium text-sm text-muted-foreground mb-2 shrink-0">Revised Text</h4>
+                  <ScrollArea className="flex-1 min-h-0 border border-green-500/20 rounded-lg bg-green-500/5 p-4">
+                    <pre className="text-sm whitespace-pre-wrap break-words font-mono">{fixPreview.revisedSection}</pre>
+                  </ScrollArea>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setFixPreview(null)}
+              disabled={isApplyingFix}
+              data-testid="button-cancel-fix"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={applyFix}
+              disabled={isApplyingFix}
+              data-testid="button-apply-fix"
+            >
+              {isApplyingFix ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Applying...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  Apply Fix
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -424,9 +587,11 @@ interface FindingGroupProps {
   getPerspectiveIcon: (name: string) => React.ElementType;
   onUpdateStatus: (id: number, status: string) => void;
   onHighlightSection?: (sectionId: string) => void;
+  onGenerateFix: (findingId: number) => void;
+  generatingFixId: number | null;
 }
 
-function FindingGroup({ title, icon, findings, perspectives, getPerspectiveIcon, onUpdateStatus, onHighlightSection }: FindingGroupProps) {
+function FindingGroup({ title, icon, findings, perspectives, getPerspectiveIcon, onUpdateStatus, onHighlightSection, onGenerateFix, generatingFixId }: FindingGroupProps) {
   const [isOpen, setIsOpen] = useState(true);
 
   return (
@@ -486,9 +651,24 @@ function FindingGroup({ title, icon, findings, perspectives, getPerspectiveIcon,
                   </button>
                 )}
 
-                <div className="flex items-center gap-2 mt-4 pt-3 border-t border-border">
+                <div className="flex items-center gap-2 mt-4 pt-3 border-t border-border flex-wrap">
                   {finding.status === "pending" && (
                     <>
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={() => onGenerateFix(finding.id)}
+                        disabled={generatingFixId !== null}
+                        className="cursor-pointer"
+                        data-testid={`button-ai-fix-${finding.id}`}
+                      >
+                        {generatingFixId === finding.id ? (
+                          <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                        ) : (
+                          <Wand2 className="w-3 h-3 mr-1" />
+                        )}
+                        {generatingFixId === finding.id ? "Generating..." : "Address with AI"}
+                      </Button>
                       <Button
                         size="sm"
                         variant="outline"
@@ -496,7 +676,7 @@ function FindingGroup({ title, icon, findings, perspectives, getPerspectiveIcon,
                         className="cursor-pointer"
                         data-testid={`button-address-${finding.id}`}
                       >
-                        <CheckCircle2 className="w-3 h-3 mr-1" /> Mark Addressed
+                        <CheckCircle2 className="w-3 h-3 mr-1" /> Mark Done
                       </Button>
                       <Button
                         size="sm"

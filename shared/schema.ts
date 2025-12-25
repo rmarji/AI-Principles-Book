@@ -84,3 +84,23 @@ export type Critique = typeof critiques.$inferSelect;
 export type InsertCritique = z.infer<typeof insertCritiqueSchema>;
 export type CritiqueFinding = typeof critiqueFindings.$inferSelect;
 export type InsertCritiqueFinding = z.infer<typeof insertCritiqueFindingSchema>;
+
+// Editorial Guidelines
+export const editorialGuidelines = pgTable("editorial_guidelines", {
+  id: serial("id").primaryKey(),
+  critiqueRules: text("critique_rules"),
+  rewritingInstructions: text("rewriting_instructions"),
+  toneVoice: text("tone_voice"),
+  formattingRequirements: text("formatting_requirements"),
+  targetAudience: text("target_audience"),
+  contentStructure: text("content_structure"),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const insertEditorialGuidelinesSchema = createInsertSchema(editorialGuidelines).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export type EditorialGuidelines = typeof editorialGuidelines.$inferSelect;
+export type InsertEditorialGuidelines = z.infer<typeof insertEditorialGuidelinesSchema>;

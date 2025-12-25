@@ -6,7 +6,7 @@ import path from "path";
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
 import { db } from "./db";
-import { critiques, critiqueFindings } from "@shared/schema";
+import { critiques, critiqueFindings, editorialGuidelines } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
 
 // Initialize OpenAI only if API key is available
@@ -350,6 +350,13 @@ export async function registerRoutes(
 
       const allFindings: typeof critiqueFindings.$inferSelect[] = [];
 
+      // Load editorial guidelines
+      const [guidelines] = await db.select().from(editorialGuidelines).limit(1);
+      let guidelinesContext = "";
+      if (guidelines?.critiqueRules) {
+        guidelinesContext = `\n\nEDITORIAL CRITIQUE RULES TO FOLLOW:\n${guidelines.critiqueRules}`;
+      }
+
       // Generate critique for each perspective
       for (let i = 0; i < validPerspectives.length; i++) {
         const perspectiveKey = validPerspectives[i];
@@ -364,7 +371,7 @@ export async function registerRoutes(
         });
 
         try {
-          const systemPrompt = `${perspective.prompt}
+          const systemPrompt = `${perspective.prompt}${guidelinesContext}
 
 You are analyzing a chapter from "The Leader's Guide to AI Teams" by Rayo Marji and Rich Bello.
 
@@ -603,6 +610,185 @@ Example: [{"category":"Structure","title":"Weak opening hook","description":"The
       } else {
         res.status(500).json({ error: "Failed to process chat" });
       }
+    }
+  });
+
+  // Editorial Guidelines endpoints
+  app.get("/api/editorial-guidelines", async (req, res) => {
+    try {
+      const [guidelines] = await db.select().from(editorialGuidelines).limit(1);
+      res.json(guidelines || null);
+    } catch (error) {
+      console.error("Error fetching guidelines:", error);
+      res.status(500).json({ error: "Failed to fetch editorial guidelines" });
+    }
+  });
+
+  app.post("/api/editorial-guidelines", async (req, res) => {
+    try {
+      const { critiqueRules, rewritingInstructions, toneVoice, formattingRequirements, targetAudience, contentStructure } = req.body;
+
+      const existing = await db.select().from(editorialGuidelines).limit(1);
+
+      if (existing.length > 0) {
+        const [updated] = await db.update(editorialGuidelines)
+          .set({
+            critiqueRules,
+            rewritingInstructions,
+            toneVoice,
+            formattingRequirements,
+            targetAudience,
+            contentStructure,
+            updatedAt: new Date()
+          })
+          .where(eq(editorialGuidelines.id, existing[0].id))
+          .returning();
+        res.json(updated);
+      } else {
+        const [created] = await db.insert(editorialGuidelines)
+          .values({
+            critiqueRules,
+            rewritingInstructions,
+            toneVoice,
+            formattingRequirements,
+            targetAudience,
+            contentStructure
+          })
+          .returning();
+        res.json(created);
+      }
+    } catch (error) {
+      console.error("Error saving guidelines:", error);
+      res.status(500).json({ error: "Failed to save editorial guidelines" });
+    }
+  });
+
+  // AI Fix endpoint - generates a fix for a critique finding
+  app.post("/api/critique/fix", async (req, res) => {
+    try {
+      const { findingId, chapterId } = req.body;
+
+      if (!findingId || !chapterId) {
+        return res.status(400).json({ error: "Finding ID and chapter ID required" });
+      }
+
+      const [finding] = await db.select().from(critiqueFindings).where(eq(critiqueFindings.id, findingId));
+      if (!finding) {
+        return res.status(404).json({ error: "Finding not found" });
+      }
+
+      const chapterPath = path.join(process.cwd(), "content", "chapters", `${chapterId}.md`);
+      if (!fs.existsSync(chapterPath)) {
+        return res.status(404).json({ error: "Chapter not found" });
+      }
+      const chapterContent = fs.readFileSync(chapterPath, "utf-8");
+
+      const [guidelines] = await db.select().from(editorialGuidelines).limit(1);
+
+      let guidelinesContext = "";
+      if (guidelines) {
+        guidelinesContext = `
+EDITORIAL GUIDELINES TO FOLLOW:
+${guidelines.toneVoice ? `Tone & Voice: ${guidelines.toneVoice}` : ""}
+${guidelines.formattingRequirements ? `Formatting: ${guidelines.formattingRequirements}` : ""}
+${guidelines.rewritingInstructions ? `Rewriting Instructions: ${guidelines.rewritingInstructions}` : ""}
+${guidelines.targetAudience ? `Target Audience: ${guidelines.targetAudience}` : ""}
+${guidelines.contentStructure ? `Content Structure: ${guidelines.contentStructure}` : ""}
+`;
+      }
+
+      const systemPrompt = `You are an expert book editor tasked with addressing a specific critique finding.
+${guidelinesContext}
+
+FINDING TO ADDRESS:
+Title: ${finding.title}
+Category: ${finding.category}
+Description: ${finding.description}
+Suggestion: ${finding.suggestion || "No specific suggestion provided"}
+Section Reference: ${finding.sectionReference || "Not specified"}
+
+INSTRUCTIONS:
+1. Identify the relevant section in the chapter that needs to be addressed
+2. Provide a rewritten/improved version of that section that addresses the critique
+3. Keep the same overall structure and flow
+4. Maintain consistency with the rest of the chapter
+5. Return your response as JSON with the following format:
+{
+  "originalSection": "The original text that needs to be changed (copy exact text from chapter)",
+  "revisedSection": "Your improved version of the text",
+  "explanation": "Brief explanation of what you changed and why"
+}
+
+IMPORTANT: The originalSection must be an EXACT match of text from the chapter so it can be found and replaced.`;
+
+      const response = await anthropic.messages.create({
+        model: "claude-sonnet-4-5",
+        max_tokens: 4096,
+        messages: [
+          { role: "user", content: `Chapter Content:\n\n${chapterContent}` }
+        ],
+        system: systemPrompt
+      });
+
+      const textContent = response.content.find(c => c.type === "text");
+      if (!textContent || textContent.type !== "text") {
+        return res.status(500).json({ error: "No response from AI" });
+      }
+
+      let jsonStr = textContent.text.trim();
+      if (jsonStr.includes("```")) {
+        const jsonMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+        if (jsonMatch) {
+          jsonStr = jsonMatch[1].trim();
+        }
+      }
+
+      const fix = JSON.parse(jsonStr);
+      res.json({
+        findingId,
+        originalSection: fix.originalSection,
+        revisedSection: fix.revisedSection,
+        explanation: fix.explanation
+      });
+    } catch (error) {
+      console.error("Error generating fix:", error);
+      res.status(500).json({ error: "Failed to generate fix" });
+    }
+  });
+
+  // Apply fix to chapter
+  app.post("/api/critique/apply-fix", async (req, res) => {
+    try {
+      const { findingId, chapterId, originalSection, revisedSection } = req.body;
+
+      if (!chapterId || !originalSection || !revisedSection) {
+        return res.status(400).json({ error: "Chapter ID, original section, and revised section required" });
+      }
+
+      const chapterPath = path.join(process.cwd(), "content", "chapters", `${chapterId}.md`);
+      if (!fs.existsSync(chapterPath)) {
+        return res.status(404).json({ error: "Chapter not found" });
+      }
+
+      let chapterContent = fs.readFileSync(chapterPath, "utf-8");
+      
+      if (!chapterContent.includes(originalSection)) {
+        return res.status(400).json({ error: "Original section not found in chapter - the text may have already been changed" });
+      }
+
+      chapterContent = chapterContent.replace(originalSection, revisedSection);
+      fs.writeFileSync(chapterPath, chapterContent, "utf-8");
+
+      if (findingId) {
+        await db.update(critiqueFindings)
+          .set({ status: "addressed" })
+          .where(eq(critiqueFindings.id, findingId));
+      }
+
+      res.json({ success: true, message: "Fix applied successfully" });
+    } catch (error) {
+      console.error("Error applying fix:", error);
+      res.status(500).json({ error: "Failed to apply fix" });
     }
   });
 
