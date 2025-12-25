@@ -3,6 +3,7 @@ export interface ChapterDiagram {
   title: string;
   definition: string;
   caption?: string;
+  afterHeading?: string;
 }
 
 export interface ChapterDiagramSet {
@@ -17,6 +18,7 @@ export const chapterDiagrams: ChapterDiagramSet[] = [
       {
         id: "ai-landscape",
         title: "Figure 1.1: The AI Landscape",
+        afterHeading: "understanding-the-ai-landscape",
         definition: `flowchart TB
     subgraph AI["Artificial Intelligence"]
         direction TB
@@ -44,6 +46,7 @@ export const chapterDiagrams: ChapterDiagramSet[] = [
       {
         id: "tool-vs-agent",
         title: "Figure 1.2: Tool vs. Agent Mindset",
+        afterHeading: "from-tools-to-teammates",
         definition: `flowchart LR
     subgraph Tool["Traditional Tool Usage"]
         direction TB
@@ -70,6 +73,7 @@ export const chapterDiagrams: ChapterDiagramSet[] = [
       {
         id: "agent-capabilities",
         title: "Figure 2.1: The Four Pillars of AI Agents",
+        afterHeading: "the-anatomy-of-an-ai-agent",
         definition: `flowchart TB
     Agent[AI Agent] --> Goals
     Agent --> Reasoning
@@ -101,6 +105,7 @@ export const chapterDiagrams: ChapterDiagramSet[] = [
       {
         id: "delegation-filter",
         title: "Figure 2.2: The Delegation Filter",
+        afterHeading: "what-to-delegate",
         definition: `flowchart TD
     Task[New Task] --> Q1{Repetitive?}
     Q1 -->|Yes| Delegate[✓ Delegate to Agent]
@@ -126,6 +131,7 @@ export const chapterDiagrams: ChapterDiagramSet[] = [
       {
         id: "agent-roles",
         title: "Figure 3.1: Specialized Agent Roles",
+        afterHeading: "the-specialist-model",
         definition: `flowchart TB
     Leader[You - The Leader] --> Research
     Leader --> Scheduling
@@ -160,6 +166,7 @@ export const chapterDiagrams: ChapterDiagramSet[] = [
       {
         id: "specialization-matrix",
         title: "Figure 3.2: Specialization vs. Generalization",
+        afterHeading: "when-to-specialize",
         definition: `quadrantChart
     title Agent Specialization Matrix
     x-axis Low Complexity --> High Complexity
@@ -185,6 +192,7 @@ export const chapterDiagrams: ChapterDiagramSet[] = [
       {
         id: "ai-org-chart",
         title: "Figure 4.1: The AI Agent Org Chart",
+        afterHeading: "the-ai-agent-org-chart",
         definition: `flowchart TB
     You[You - Executive] --> Chief[Chief AI Agent<br/>Orchestrator]
     
@@ -209,6 +217,7 @@ export const chapterDiagrams: ChapterDiagramSet[] = [
       {
         id: "workflow-patterns",
         title: "Figure 4.2: Agent Workflow Patterns",
+        afterHeading: "workflow-patterns",
         definition: `flowchart LR
     subgraph Sequential["Sequential"]
         direction LR
@@ -237,6 +246,7 @@ export const chapterDiagrams: ChapterDiagramSet[] = [
       {
         id: "delegation-framework",
         title: "Figure 5.1: The Arootah AI Delegation Framework",
+        afterHeading: "the-arootah-ai-delegation-framework",
         definition: `flowchart TD
     Task[Task to Delegate] --> Instructions
     
@@ -270,6 +280,7 @@ export const chapterDiagrams: ChapterDiagramSet[] = [
       {
         id: "agent-kpis",
         title: "Figure 5.2: Agent Performance Metrics",
+        afterHeading: "measuring-agent-performance",
         definition: `flowchart LR
     subgraph Metrics["Agent KPIs"]
         direction TB
@@ -297,6 +308,7 @@ export const chapterDiagrams: ChapterDiagramSet[] = [
       {
         id: "time-buying-agents",
         title: "Figure 6.1: Time-Buying Agent System",
+        afterHeading: "time-buying-agents",
         definition: `flowchart TB
     subgraph Morning["Morning Automation"]
         Inbox[Inbox Triage Agent] --> Priority[Prioritized Email Queue]
@@ -321,6 +333,7 @@ export const chapterDiagrams: ChapterDiagramSet[] = [
       {
         id: "email-triage-flow",
         title: "Figure 6.2: Email Triage Workflow",
+        afterHeading: "email-and-calendar-automation",
         definition: `flowchart TD
     Email[Incoming Email] --> Agent[Triage Agent]
     
@@ -346,6 +359,7 @@ export const chapterDiagrams: ChapterDiagramSet[] = [
       {
         id: "decision-support",
         title: "Figure 7.1: AI-Enhanced Decision Making",
+        afterHeading: "ai-enhanced-decision-making",
         definition: `flowchart LR
     Decision[Strategic Decision] --> Research[Research Agent<br/>Gather Data]
     Research --> Analysis[Analysis Agent<br/>Process Data]
@@ -361,6 +375,7 @@ export const chapterDiagrams: ChapterDiagramSet[] = [
       {
         id: "scenario-planning",
         title: "Figure 7.2: Scenario Planning with AI",
+        afterHeading: "scenario-planning-with-ai",
         definition: `flowchart TB
     Question[Strategic Question] --> Agent[Scenario Agent]
     
@@ -387,6 +402,7 @@ export const chapterDiagrams: ChapterDiagramSet[] = [
       {
         id: "goal-tracking",
         title: "Figure 8.1: AI-Powered Goal Tracking System",
+        afterHeading: "ai-powered-goal-tracking",
         definition: `flowchart TB
     Goals[Strategic Goals] --> Agent[Goal Tracking Agent]
     
@@ -406,6 +422,7 @@ export const chapterDiagrams: ChapterDiagramSet[] = [
       {
         id: "analytics-pipeline",
         title: "Figure 8.2: Performance Analytics Pipeline",
+        afterHeading: "automated-business-intelligence",
         definition: `flowchart LR
     subgraph Sources["Data Sources"]
         S1[Salesforce]
@@ -435,6 +452,7 @@ export const chapterDiagrams: ChapterDiagramSet[] = [
       {
         id: "human-ai-collaboration",
         title: "Figure 9.1: The 80/20 Human-AI Model",
+        afterHeading: "the-8020-rule-for-ai-collaboration",
         definition: `flowchart LR
     Task[Task] --> Split{Split Work}
     
@@ -465,6 +483,7 @@ export const chapterDiagrams: ChapterDiagramSet[] = [
       {
         id: "escalation-protocol",
         title: "Figure 9.2: Agent Escalation Protocol",
+        afterHeading: "when-to-escalate",
         definition: `flowchart TD
     Agent[Agent Working] --> Check{Confidence<br/>Check}
     
@@ -490,6 +509,7 @@ export const chapterDiagrams: ChapterDiagramSet[] = [
       {
         id: "enterprise-scaling",
         title: "Figure 10.1: Enterprise AI Agent Architecture",
+        afterHeading: "enterprise-ai-agent-architecture",
         definition: `flowchart TB
     CEO[CEO] --> ExecTeam[Executive AI Team]
     
@@ -526,6 +546,7 @@ export const chapterDiagrams: ChapterDiagramSet[] = [
       {
         id: "governance-framework",
         title: "Figure 10.2: AI Governance Framework",
+        afterHeading: "governance-and-risk-management",
         definition: `flowchart TB
     subgraph Policy["Policy Layer"]
         P1[Acceptable Use Policy]

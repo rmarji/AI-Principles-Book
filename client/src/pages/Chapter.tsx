@@ -44,6 +44,97 @@ function formatWordCount(count: number): string {
 
 type RightPanel = 'quality' | 'critique' | 'ai_critique' | 'discussion' | null;
 
+interface ChapterContentProps {
+  htmlContent: string;
+  chapterId: string;
+}
+
+function ChapterContentWithDiagrams({ htmlContent, chapterId }: ChapterContentProps) {
+  const diagrams = getDiagramsForChapter(chapterId);
+  
+  if (diagrams.length === 0) {
+    return (
+      <article className="chapter-content max-w-none" data-testid="chapter-content">
+        <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
+      </article>
+    );
+  }
+  
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(htmlContent, 'text/html');
+  const elements: Array<{ type: 'html' | 'diagram'; content?: string; diagram?: typeof diagrams[0] }> = [];
+  
+  const diagramMap = new Map<string, typeof diagrams[0]>();
+  diagrams.forEach(d => {
+    if (d.afterHeading) {
+      diagramMap.set(d.afterHeading, d);
+    }
+  });
+  
+  const processNode = (node: ChildNode) => {
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const el = node as Element;
+      const tagName = el.tagName.toLowerCase();
+      
+      if (['h1', 'h2', 'h3', 'h4'].includes(tagName)) {
+        const id = el.getAttribute('id') || '';
+        elements.push({ type: 'html', content: el.outerHTML });
+        
+        if (diagramMap.has(id)) {
+          elements.push({ type: 'diagram', diagram: diagramMap.get(id)! });
+          diagramMap.delete(id);
+        }
+      } else {
+        elements.push({ type: 'html', content: el.outerHTML });
+      }
+    } else if (node.nodeType === Node.TEXT_NODE && node.textContent?.trim()) {
+      elements.push({ type: 'html', content: node.textContent });
+    }
+  };
+  
+  doc.body.childNodes.forEach(processNode);
+  
+  const remainingDiagrams = diagrams.filter(d => !d.afterHeading || diagramMap.has(d.afterHeading));
+  
+  return (
+    <>
+      <article className="chapter-content max-w-none" data-testid="chapter-content">
+        {elements.map((el, i) => {
+          if (el.type === 'html' && el.content) {
+            return <div key={i} dangerouslySetInnerHTML={{ __html: el.content }} />;
+          }
+          if (el.type === 'diagram' && el.diagram) {
+            return (
+              <MermaidDiagram
+                key={el.diagram.id}
+                id={el.diagram.id}
+                title={el.diagram.title}
+                definition={el.diagram.definition}
+                caption={el.diagram.caption}
+              />
+            );
+          }
+          return null;
+        })}
+      </article>
+      
+      {remainingDiagrams.length > 0 && (
+        <div className="mt-8 space-y-6" data-testid="chapter-diagrams-remaining">
+          {remainingDiagrams.map((diagram) => (
+            <MermaidDiagram
+              key={diagram.id}
+              id={diagram.id}
+              title={diagram.title}
+              definition={diagram.definition}
+              caption={diagram.caption}
+            />
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
 export default function Chapter() {
   const [match, params] = useRoute("/chapter/:id");
   const [location] = useLocation();
@@ -199,30 +290,10 @@ export default function Chapter() {
                     <span className="ml-3 text-muted-foreground">Loading chapter content...</span>
                   </div>
                 ) : displayContent ? (
-                  <>
-                    <article
-                      className="chapter-content max-w-none"
-                      data-testid="chapter-content"
-                    >
-                       <div dangerouslySetInnerHTML={{ __html: displayContent }} />
-                    </article>
-                    
-                    {/* Chapter Diagrams */}
-                    {chapterId && getDiagramsForChapter(chapterId).length > 0 && (
-                      <div className="mt-12 space-y-6" data-testid="chapter-diagrams">
-                        <h2 className="text-2xl font-heading font-bold text-foreground">Visual References</h2>
-                        {getDiagramsForChapter(chapterId).map((diagram) => (
-                          <MermaidDiagram
-                            key={diagram.id}
-                            id={diagram.id}
-                            title={diagram.title}
-                            definition={diagram.definition}
-                            caption={diagram.caption}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </>
+                  <ChapterContentWithDiagrams
+                    htmlContent={displayContent}
+                    chapterId={chapterId || ''}
+                  />
                 ) : (
                   <div className="flex flex-col items-center justify-center py-20 text-center">
                     <AlertTriangle className="w-10 h-10 text-muted-foreground mb-4" />
