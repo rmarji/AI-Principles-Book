@@ -65,7 +65,20 @@ function cleanSvgForExport(svgString: string): string {
   return cleaned;
 }
 
-export async function svgToPng(svgString: string, width: number = 600, height: number = 400): Promise<Uint8Array | null> {
+export interface PngResult {
+  imageData: Uint8Array;
+  width: number;
+  height: number;
+}
+
+function parsePixelValue(value: string | null): number | null {
+  if (!value) return null;
+  if (value.includes('%')) return null;
+  const num = parseFloat(value.replace('px', ''));
+  return (!isNaN(num) && num > 0) ? num : null;
+}
+
+export async function svgToPng(svgString: string, defaultWidth: number = 600, defaultHeight: number = 400): Promise<PngResult | null> {
   return new Promise((resolve) => {
     const timeout = setTimeout(() => {
       console.warn("SVG to PNG conversion timed out");
@@ -93,27 +106,28 @@ export async function svgToPng(svgString: string, width: number = 600, height: n
         return;
       }
       
-      let svgWidth = width;
-      let svgHeight = height;
+      let svgWidth = defaultWidth;
+      let svgHeight = defaultHeight;
       
       const viewBox = svgElement.getAttribute('viewBox');
       if (viewBox) {
         const parts = viewBox.split(/[\s,]+/);
         if (parts.length === 4) {
-          svgWidth = parseFloat(parts[2]) || width;
-          svgHeight = parseFloat(parts[3]) || height;
+          const vbWidth = parseFloat(parts[2]);
+          const vbHeight = parseFloat(parts[3]);
+          if (!isNaN(vbWidth) && vbWidth > 0) svgWidth = vbWidth;
+          if (!isNaN(vbHeight) && vbHeight > 0) svgHeight = vbHeight;
         }
       }
       
       const widthAttr = svgElement.getAttribute('width');
       const heightAttr = svgElement.getAttribute('height');
-      if (widthAttr) {
-        const w = parseFloat(widthAttr.replace('px', ''));
-        if (!isNaN(w) && w > 0) svgWidth = w;
-      }
-      if (heightAttr) {
-        const h = parseFloat(heightAttr.replace('px', ''));
-        if (!isNaN(h) && h > 0) svgHeight = h;
+      const parsedWidth = parsePixelValue(widthAttr);
+      const parsedHeight = parsePixelValue(heightAttr);
+      
+      if (parsedWidth !== null && parsedHeight !== null) {
+        svgWidth = parsedWidth;
+        svgHeight = parsedHeight;
       }
       
       svgElement.setAttribute('width', String(svgWidth));
@@ -132,11 +146,14 @@ export async function svgToPng(svgString: string, width: number = 600, height: n
         clearTimeout(timeout);
         try {
           const canvas = document.createElement('canvas');
-          const targetWidth = Math.min(svgWidth, 500);
-          const scale = targetWidth / svgWidth;
+          const maxWidth = 500;
+          const scale = svgWidth > maxWidth ? maxWidth / svgWidth : 1;
           
-          canvas.width = Math.max(1, svgWidth * scale);
-          canvas.height = Math.max(1, svgHeight * scale);
+          const canvasWidth = Math.max(1, Math.round(svgWidth * scale));
+          const canvasHeight = Math.max(1, Math.round(svgHeight * scale));
+          
+          canvas.width = canvasWidth;
+          canvas.height = canvasHeight;
           
           const ctx = canvas.getContext('2d');
           if (!ctx) {
@@ -151,7 +168,11 @@ export async function svgToPng(svgString: string, width: number = 600, height: n
           canvas.toBlob((blob) => {
             if (blob) {
               blob.arrayBuffer().then(buffer => {
-                resolve(new Uint8Array(buffer));
+                resolve({
+                  imageData: new Uint8Array(buffer),
+                  width: canvasWidth,
+                  height: canvasHeight
+                });
               }).catch(() => resolve(null));
             } else {
               resolve(null);
@@ -195,15 +216,15 @@ export async function renderDiagramsToImages(
   for (const diagram of diagrams) {
     const svg = await renderMermaidToSvg(diagram.id, diagram.definition);
     if (svg) {
-      const imageData = await svgToPng(svg, 500, 350);
-      if (imageData) {
+      const pngResult = await svgToPng(svg, 500, 350);
+      if (pngResult) {
         results.push({
           id: diagram.id,
           title: diagram.title,
           caption: diagram.caption,
-          imageData,
-          width: 500,
-          height: 350
+          imageData: pngResult.imageData,
+          width: pngResult.width,
+          height: pngResult.height
         });
       }
     }

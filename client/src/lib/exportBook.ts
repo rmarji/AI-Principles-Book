@@ -436,15 +436,15 @@ async function createDiagramParagraphsWithImages(diagrams: ChapterDiagram[]): Pr
       })
     );
     
-    // Image
+    // Image - use actual dimensions from the PNG
     paragraphs.push(
       new Paragraph({
         children: [
           new ImageRun({
             data: diagramImg.imageData,
             transformation: {
-              width: 500,
-              height: 350,
+              width: diagramImg.width,
+              height: diagramImg.height,
             },
             type: 'png',
           }),
