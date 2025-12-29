@@ -2,6 +2,7 @@ import {
   type User, type InsertUser,
   type Book, type InsertBook, books,
   type Chapter, type InsertChapter, chapters,
+  type OutlineChapter, type InsertOutlineChapter, outlineChapters,
   type OutlineSection, type InsertOutlineSection, outlineSections,
   users
 } from "@shared/schema";
@@ -29,13 +30,22 @@ export interface IStorage {
   updateChapter(id: number, chapter: Partial<InsertChapter>): Promise<Chapter | undefined>;
   deleteChapter(id: number): Promise<boolean>;
   
-  // Outline Sections
-  getOutlineSectionsByBook(bookId: number): Promise<OutlineSection[]>;
+  // Outline Chapters (hierarchical outline top-level)
+  getOutlineChaptersByBook(bookId: number): Promise<OutlineChapter[]>;
+  getOutlineChapter(id: number): Promise<OutlineChapter | undefined>;
+  createOutlineChapter(chapter: InsertOutlineChapter): Promise<OutlineChapter>;
+  updateOutlineChapter(id: number, chapter: Partial<InsertOutlineChapter>): Promise<OutlineChapter | undefined>;
+  deleteOutlineChapter(id: number): Promise<boolean>;
+  deleteOutlineChaptersByBook(bookId: number): Promise<boolean>;
+  approveOutlineChapter(id: number): Promise<OutlineChapter | undefined>;
+  
+  // Outline Sections (subsections within outline chapters)
+  getOutlineSectionsByChapter(outlineChapterId: number): Promise<OutlineSection[]>;
   getOutlineSection(id: number): Promise<OutlineSection | undefined>;
   createOutlineSection(section: InsertOutlineSection): Promise<OutlineSection>;
   updateOutlineSection(id: number, section: Partial<InsertOutlineSection>): Promise<OutlineSection | undefined>;
   deleteOutlineSection(id: number): Promise<boolean>;
-  deleteOutlineSectionsByBook(bookId: number): Promise<boolean>;
+  deleteOutlineSectionsByChapter(outlineChapterId: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -123,10 +133,53 @@ export class DatabaseStorage implements IStorage {
     return result.length > 0;
   }
 
+  // Outline Chapters
+  async getOutlineChaptersByBook(bookId: number): Promise<OutlineChapter[]> {
+    return db.select().from(outlineChapters)
+      .where(eq(outlineChapters.bookId, bookId))
+      .orderBy(asc(outlineChapters.sortOrder));
+  }
+
+  async getOutlineChapter(id: number): Promise<OutlineChapter | undefined> {
+    const result = await db.select().from(outlineChapters).where(eq(outlineChapters.id, id));
+    return result[0];
+  }
+
+  async createOutlineChapter(chapter: InsertOutlineChapter): Promise<OutlineChapter> {
+    const result = await db.insert(outlineChapters).values(chapter).returning();
+    return result[0];
+  }
+
+  async updateOutlineChapter(id: number, chapter: Partial<InsertOutlineChapter>): Promise<OutlineChapter | undefined> {
+    const result = await db.update(outlineChapters)
+      .set(chapter)
+      .where(eq(outlineChapters.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteOutlineChapter(id: number): Promise<boolean> {
+    const result = await db.delete(outlineChapters).where(eq(outlineChapters.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async deleteOutlineChaptersByBook(bookId: number): Promise<boolean> {
+    const result = await db.delete(outlineChapters).where(eq(outlineChapters.bookId, bookId)).returning();
+    return result.length >= 0;
+  }
+
+  async approveOutlineChapter(id: number): Promise<OutlineChapter | undefined> {
+    const result = await db.update(outlineChapters)
+      .set({ approvalStatus: "approved", approvedAt: new Date() })
+      .where(eq(outlineChapters.id, id))
+      .returning();
+    return result[0];
+  }
+
   // Outline Sections
-  async getOutlineSectionsByBook(bookId: number): Promise<OutlineSection[]> {
+  async getOutlineSectionsByChapter(outlineChapterId: number): Promise<OutlineSection[]> {
     return db.select().from(outlineSections)
-      .where(eq(outlineSections.bookId, bookId))
+      .where(eq(outlineSections.outlineChapterId, outlineChapterId))
       .orderBy(asc(outlineSections.sortOrder));
   }
 
@@ -153,8 +206,8 @@ export class DatabaseStorage implements IStorage {
     return result.length > 0;
   }
 
-  async deleteOutlineSectionsByBook(bookId: number): Promise<boolean> {
-    const result = await db.delete(outlineSections).where(eq(outlineSections.bookId, bookId)).returning();
+  async deleteOutlineSectionsByChapter(outlineChapterId: number): Promise<boolean> {
+    const result = await db.delete(outlineSections).where(eq(outlineSections.outlineChapterId, outlineChapterId)).returning();
     return result.length >= 0;
   }
 }

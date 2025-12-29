@@ -12,6 +12,7 @@ export const books = pgTable("books", {
   description: text("description"),
   coverColor: text("cover_color").default("#6366f1"),
   coverPrompt: text("cover_prompt"),
+  coverImageUrl: text("cover_image_url"),
   outlineSummary: text("outline_summary"),
   status: text("status").notNull().default("draft"), // draft, editing, review, published
   isDefault: boolean("is_default").default(false),
@@ -52,15 +53,39 @@ export const insertChapterSchema = createInsertSchema(chapters).omit({
 export type Chapter = typeof chapters.$inferSelect;
 export type InsertChapter = z.infer<typeof insertChapterSchema>;
 
-// Book Outline Sections - structured outline entries for guiding chapter creation
-export const outlineSections = pgTable("outline_sections", {
+// Book Outline Chapters - top-level chapter entries in the outline with approval workflow
+export const outlineChapters = pgTable("outline_chapters", {
   id: serial("id").primaryKey(),
   bookId: integer("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
   sortOrder: integer("sort_order").notNull().default(0),
   title: text("title").notNull(),
   summary: text("summary"),
   guidanceNotes: text("guidance_notes"),
+  approvalStatus: text("approval_status").notNull().default("draft"), // draft, in_review, approved
+  approvedAt: timestamp("approved_at"),
   aiGenerated: boolean("ai_generated").default(false),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const insertOutlineChapterSchema = createInsertSchema(outlineChapters).omit({
+  id: true,
+  createdAt: true,
+  approvedAt: true,
+});
+
+export type OutlineChapter = typeof outlineChapters.$inferSelect;
+export type InsertOutlineChapter = z.infer<typeof insertOutlineChapterSchema>;
+
+// Outline Sections - hierarchical subsections within outline chapters
+export const outlineSections = pgTable("outline_sections", {
+  id: serial("id").primaryKey(),
+  outlineChapterId: integer("outline_chapter_id").notNull().references(() => outlineChapters.id, { onDelete: "cascade" }),
+  parentSectionId: integer("parent_section_id"),
+  sortOrder: integer("sort_order").notNull().default(0),
+  level: integer("level").notNull().default(1), // 1 = direct child of chapter, 2+ = nested
+  title: text("title").notNull(),
+  summary: text("summary"),
+  guidanceNotes: text("guidance_notes"),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
