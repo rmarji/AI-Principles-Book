@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
-import { Plus, Book, Edit2, Trash2, MoreVertical, FileText, Loader2, Sparkles, Home, ArrowLeft, ChevronRight, Wand2, Save, X, GripVertical } from "lucide-react";
+import { Plus, Book, Edit2, Trash2, MoreVertical, FileText, Loader2, Sparkles, Home, ArrowLeft, ChevronRight, Wand2, Save, X, GripVertical, ListTree, Image } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { Book as BookType, Chapter } from "@shared/schema";
+import type { Book as BookType, Chapter, OutlineSection } from "@shared/schema";
 
 const COVER_COLORS = [
   "#6366f1", "#8b5cf6", "#ec4899", "#ef4444", "#f97316", 
@@ -45,6 +45,18 @@ export default function Dashboard() {
   const [aiPrompt, setAiPrompt] = useState("");
   const [generating, setGenerating] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("write");
+  
+  // Outline management state
+  const [outlineSections, setOutlineSections] = useState<OutlineSection[]>([]);
+  const [loadingOutline, setLoadingOutline] = useState(false);
+  const [generatingOutline, setGeneratingOutline] = useState(false);
+  const [outlineGuidance, setOutlineGuidance] = useState("");
+  const [chapterCount, setChapterCount] = useState("10");
+  const [showOutlineView, setShowOutlineView] = useState(false);
+  const [selectedOutlineSection, setSelectedOutlineSection] = useState<number | null>(null);
+  
+  // Cover prompt state
+  const [generatingCoverPrompt, setGeneratingCoverPrompt] = useState(false);
 
   useEffect(() => {
     fetchBooks();
@@ -53,6 +65,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (selectedBook) {
       fetchChapters(selectedBook.id);
+      fetchOutline(selectedBook.id);
     }
   }, [selectedBook]);
 
@@ -80,6 +93,70 @@ export default function Dashboard() {
       toast({ title: "Error", description: "Failed to load chapters", variant: "destructive" });
     } finally {
       setLoadingChapters(false);
+    }
+  };
+
+  const fetchOutline = async (bookId: number) => {
+    setLoadingOutline(true);
+    try {
+      const response = await fetch(`/api/books/${bookId}/outline`);
+      const data = await response.json();
+      setOutlineSections(data);
+    } catch (error) {
+      console.error("Failed to fetch outline:", error);
+    } finally {
+      setLoadingOutline(false);
+    }
+  };
+
+  const handleGenerateOutline = async () => {
+    if (!selectedBook) return;
+    setGeneratingOutline(true);
+    try {
+      const response = await fetch(`/api/books/${selectedBook.id}/outline/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chapterCount: parseInt(chapterCount),
+          additionalGuidance: outlineGuidance
+        })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setOutlineSections(data.sections);
+        toast({ title: "Outline Generated", description: `Created ${data.sections.length} chapter outlines` });
+      } else {
+        toast({ title: "Error", description: "Failed to generate outline", variant: "destructive" });
+      }
+    } catch (error) {
+      console.error("Error generating outline:", error);
+      toast({ title: "Error", description: "Failed to generate outline", variant: "destructive" });
+    } finally {
+      setGeneratingOutline(false);
+    }
+  };
+
+  const handleGenerateCoverPrompt = async () => {
+    if (!selectedBook) return;
+    setGeneratingCoverPrompt(true);
+    try {
+      const response = await fetch(`/api/books/${selectedBook.id}/cover-prompt/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setSelectedBook({ ...selectedBook, coverPrompt: data.coverPrompt });
+        setBooks(books.map(b => b.id === selectedBook.id ? { ...b, coverPrompt: data.coverPrompt } : b));
+        toast({ title: "Cover Prompt Generated", description: "AI has created a cover image prompt" });
+      } else {
+        toast({ title: "Error", description: "Failed to generate cover prompt", variant: "destructive" });
+      }
+    } catch (error) {
+      console.error("Error generating cover prompt:", error);
+      toast({ title: "Error", description: "Failed to generate cover prompt", variant: "destructive" });
+    } finally {
+      setGeneratingCoverPrompt(false);
     }
   };
 
@@ -180,13 +257,21 @@ export default function Dashboard() {
         content: chapter.content || "",
         status: chapter.status || "draft"
       });
-    } else {
+      setSelectedOutlineSection(null);
+    } else if (!selectedOutlineSection) {
       setEditingChapter(null);
       setChapterForm(EMPTY_CHAPTER);
     }
     setAiPrompt("");
     setActiveTab("write");
     setChapterDialogOpen(true);
+  };
+
+  const closeChapterDialog = () => {
+    setChapterDialogOpen(false);
+    setEditingChapter(null);
+    setChapterForm(EMPTY_CHAPTER);
+    setSelectedOutlineSection(null);
   };
 
   const handleSaveChapter = async () => {
@@ -271,7 +356,8 @@ export default function Dashboard() {
         body: JSON.stringify({ 
           prompt: aiPrompt,
           title: chapterForm.title || "New Chapter",
-          context: selectedBook.description
+          context: selectedBook.description,
+          outlineSectionId: selectedOutlineSection
         })
       });
       
@@ -331,7 +417,7 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <h1 className="text-xl font-semibold">{selectedBook.title}</h1>
-                  <p className="text-sm text-muted-foreground">{chapters.length} chapters</p>
+                  <p className="text-sm text-muted-foreground">{chapters.length} chapters • {outlineSections.length} outline sections</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -341,87 +427,251 @@ export default function Dashboard() {
                     Preview
                   </Button>
                 </Link>
-                <Button onClick={() => openChapterDialog()} data-testid="button-add-chapter">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Chapter
-                </Button>
+                {!showOutlineView && (
+                  <Button onClick={() => openChapterDialog()} data-testid="button-add-chapter">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Chapter
+                  </Button>
+                )}
               </div>
+            </div>
+            
+            {/* Outline / Chapters Toggle */}
+            <div className="flex items-center gap-2 mt-4">
+              <Button 
+                variant={!showOutlineView ? "default" : "outline"} 
+                size="sm"
+                onClick={() => setShowOutlineView(false)}
+                data-testid="button-show-chapters"
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                Chapters
+              </Button>
+              <Button 
+                variant={showOutlineView ? "default" : "outline"} 
+                size="sm"
+                onClick={() => setShowOutlineView(true)}
+                data-testid="button-show-outline"
+              >
+                <ListTree className="w-4 h-4 mr-2" />
+                Outline
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleGenerateCoverPrompt}
+                disabled={generatingCoverPrompt}
+                data-testid="button-generate-cover"
+              >
+                {generatingCoverPrompt ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Image className="w-4 h-4 mr-2" />}
+                Cover Prompt
+              </Button>
             </div>
           </div>
         </header>
 
         <main className="max-w-5xl mx-auto px-6 py-8">
-          {loadingChapters ? (
-            <div className="flex items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            </div>
-          ) : chapters.length === 0 ? (
-            <div className="text-center py-16">
-              <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                <FileText className="w-8 h-8 text-muted-foreground" />
-              </div>
-              <h2 className="text-xl font-semibold mb-2">No chapters yet</h2>
-              <p className="text-muted-foreground mb-6">Start writing your book by adding chapters</p>
-              <Button onClick={() => openChapterDialog()}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add First Chapter
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {chapters.map((chapter, index) => (
-                <Card key={chapter.id} className="group hover:shadow-md transition-shadow" data-testid={`card-chapter-${chapter.id}`}>
-                  <div className="flex items-center gap-4 p-4">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <GripVertical className="w-4 h-4" />
-                      <span className="text-sm font-medium w-8">{index + 1}</span>
+          {/* Outline View */}
+          {showOutlineView ? (
+            <div className="space-y-6">
+              {/* Generate Outline Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Generate Book Outline</CardTitle>
+                  <CardDescription>Let AI create a structured outline to guide your chapter writing</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-4 gap-4">
+                    <div className="col-span-1">
+                      <Label htmlFor="chapter-count">Number of Chapters</Label>
+                      <Input 
+                        id="chapter-count"
+                        type="number"
+                        min="3"
+                        max="20"
+                        value={chapterCount}
+                        onChange={(e) => setChapterCount(e.target.value)}
+                        data-testid="input-chapter-count"
+                      />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium truncate">{chapter.title}</h3>
-                      {chapter.subtitle && (
-                        <p className="text-sm text-muted-foreground truncate">{chapter.subtitle}</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3">
-                      {chapter.wordCount && (
-                        <Badge variant="outline" className="text-xs">
-                          {chapter.wordCount.toLocaleString()} words
-                        </Badge>
-                      )}
-                      <Badge className={getStatusColor(chapter.status || "draft")} variant="outline">
-                        {chapter.status || "draft"}
-                      </Badge>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => openChapterDialog(chapter)} data-testid={`button-edit-chapter-${chapter.id}`}>
-                            <Edit2 className="w-4 h-4 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            className="text-destructive"
-                            onClick={() => handleDeleteChapter(chapter.id)}
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    <div className="col-span-3">
+                      <Label htmlFor="outline-guidance">Additional Guidance (optional)</Label>
+                      <Input 
+                        id="outline-guidance"
+                        placeholder="E.g., Focus on practical examples, include case studies..."
+                        value={outlineGuidance}
+                        onChange={(e) => setOutlineGuidance(e.target.value)}
+                        data-testid="input-outline-guidance"
+                      />
                     </div>
                   </div>
+                  <Button 
+                    onClick={handleGenerateOutline} 
+                    disabled={generatingOutline}
+                    data-testid="button-generate-outline"
+                  >
+                    {generatingOutline ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Generating Outline...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Generate Outline with AI
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Outline Sections List */}
+              {loadingOutline ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                </div>
+              ) : outlineSections.length === 0 ? (
+                <div className="text-center py-12 bg-muted/30 rounded-lg">
+                  <ListTree className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="font-medium mb-2">No outline yet</h3>
+                  <p className="text-sm text-muted-foreground">Generate an outline to plan your book structure</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-lg">Chapter Outline ({outlineSections.length} chapters)</h3>
+                  {outlineSections.map((section, index) => (
+                    <Card key={section.id} className="group" data-testid={`card-outline-${section.id}`}>
+                      <div className="p-4">
+                        <div className="flex items-start gap-4">
+                          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
+                            {index + 1}
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-medium">{section.title}</h4>
+                            {section.summary && (
+                              <p className="text-sm text-muted-foreground mt-1">{section.summary}</p>
+                            )}
+                            {section.guidanceNotes && (
+                              <p className="text-xs text-muted-foreground mt-2 italic">
+                                <span className="font-medium">Guidance:</span> {section.guidanceNotes}
+                              </p>
+                            )}
+                          </div>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedOutlineSection(section.id);
+                              setChapterForm({ ...EMPTY_CHAPTER, title: section.title });
+                              setShowOutlineView(false);
+                              openChapterDialog();
+                            }}
+                            data-testid={`button-create-from-outline-${section.id}`}
+                          >
+                            <Plus className="w-4 h-4 mr-1" />
+                            Create Chapter
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+
+              {/* Cover Prompt Display */}
+              {selectedBook.coverPrompt && (
+                <Card className="mt-6">
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Image className="w-5 h-5" />
+                      AI Cover Prompt
+                    </CardTitle>
+                    <CardDescription>Use this prompt with an image generation tool to create your book cover</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="bg-muted p-4 rounded-lg text-sm whitespace-pre-wrap">
+                      {selectedBook.coverPrompt}
+                    </div>
+                  </CardContent>
                 </Card>
-              ))}
+              )}
             </div>
+          ) : (
+            /* Chapters View */
+            <>
+              {loadingChapters ? (
+                <div className="flex items-center justify-center py-20">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                </div>
+              ) : chapters.length === 0 ? (
+                <div className="text-center py-16">
+                  <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                    <FileText className="w-8 h-8 text-muted-foreground" />
+                  </div>
+                  <h2 className="text-xl font-semibold mb-2">No chapters yet</h2>
+                  <p className="text-muted-foreground mb-6">Start writing your book by adding chapters</p>
+                  <Button onClick={() => openChapterDialog()}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add First Chapter
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {chapters.map((chapter, index) => (
+                    <Card key={chapter.id} className="group hover:shadow-md transition-shadow" data-testid={`card-chapter-${chapter.id}`}>
+                      <div className="flex items-center gap-4 p-4">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <GripVertical className="w-4 h-4" />
+                          <span className="text-sm font-medium w-8">{index + 1}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium truncate">{chapter.title}</h3>
+                          {chapter.subtitle && (
+                            <p className="text-sm text-muted-foreground truncate">{chapter.subtitle}</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {chapter.wordCount && (
+                            <Badge variant="outline" className="text-xs">
+                              {chapter.wordCount.toLocaleString()} words
+                            </Badge>
+                          )}
+                          <Badge className={getStatusColor(chapter.status || "draft")} variant="outline">
+                            {chapter.status || "draft"}
+                          </Badge>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                <MoreVertical className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => openChapterDialog(chapter)} data-testid={`button-edit-chapter-${chapter.id}`}>
+                                <Edit2 className="w-4 h-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                className="text-destructive"
+                                onClick={() => handleDeleteChapter(chapter.id)}
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </main>
 
         {/* Chapter Editor Dialog */}
-        <Dialog open={chapterDialogOpen} onOpenChange={setChapterDialogOpen}>
+        <Dialog open={chapterDialogOpen} onOpenChange={(open) => !open && closeChapterDialog()}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
             <DialogHeader>
               <DialogTitle>{editingChapter ? "Edit Chapter" : "Add New Chapter"}</DialogTitle>
@@ -522,7 +772,7 @@ export default function Dashboard() {
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setChapterDialogOpen(false)}>
+              <Button variant="outline" onClick={closeChapterDialog}>
                 <X className="w-4 h-4 mr-2" />
                 Cancel
               </Button>
