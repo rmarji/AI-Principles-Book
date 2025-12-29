@@ -10,7 +10,7 @@ export const BOOK_TITLE = "The Leader's Guide to AI Teams";
 export const BOOK_SUBTITLE = "Leveraging Artificial Intelligence and AI Agents for Peak Performance";
 export const AUTHORS = [
   { name: "Rayo Marji", title: "CTO, Arootah" },
-  { name: "Rich Bello", title: "Co-Founder, Arootah" }
+  { name: "Rich Bello", title: "Founder, Arootah" }
 ];
 
 function stripHtml(html: string): string {

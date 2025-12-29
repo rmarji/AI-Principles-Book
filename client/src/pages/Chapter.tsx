@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
-import { Sparkles, ArrowRight, MessageSquare, Share2, Bookmark, Brain, Loader2, FileText, ListChecks, AlertTriangle, ChevronDown, PanelRightClose, PanelRight, Download } from "lucide-react";
+import { Sparkles, ArrowRight, MessageSquare, Share2, Bookmark, Brain, Loader2, FileText, ListChecks, AlertTriangle, ChevronDown, PanelRightClose, PanelRight, Download, Settings } from "lucide-react";
 import { motion } from "framer-motion";
 import { marked } from "marked";
 import { QualityChecklist } from "@/components/QualityChecklist";
@@ -17,6 +17,7 @@ import { exportChapterToWord } from "@/lib/exportBook";
 import { ScorecardBadge } from "@/components/ScorecardBadge";
 import { MermaidDiagram } from "@/components/MermaidDiagram";
 import { getDiagramsForChapter } from "@/lib/chapterDiagrams";
+import { SettingsPanel } from "@/components/SettingsPanel";
 
 function generateSlug(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -42,7 +43,7 @@ function formatWordCount(count: number): string {
   return `${count}`;
 }
 
-type RightPanel = 'quality' | 'critique' | 'ai_critique' | 'discussion' | null;
+type RightPanel = 'quality' | 'critique' | 'ai_critique' | 'discussion' | 'settings' | null;
 
 interface ChapterContentProps {
   htmlContent: string;
@@ -418,6 +419,18 @@ export default function Chapter() {
                 <MessageSquare className="w-3.5 h-3.5" />
                 Chat
               </button>
+              <button
+                onClick={() => setActiveRightPanel(activeRightPanel === 'settings' ? null : 'settings')}
+                className={`flex-1 p-2 text-xs font-medium flex items-center justify-center gap-1.5 transition-colors ${
+                  activeRightPanel === 'settings' 
+                    ? 'bg-primary/10 text-primary border-b-2 border-primary' 
+                    : 'text-muted-foreground hover:bg-muted/50'
+                }`}
+                data-testid="tab-settings"
+              >
+                <Settings className="w-3.5 h-3.5" />
+                Settings
+              </button>
             </div>
             
             {/* Panel Content */}
@@ -513,6 +526,10 @@ export default function Chapter() {
                   chapterTitle={chapter?.subtitle || chapter?.title || ''}
                   chapterContent={rawContent}
                 />
+              )}
+
+              {activeRightPanel === 'settings' && (
+                <SettingsPanel />
               )}
               
               {activeRightPanel === null && (

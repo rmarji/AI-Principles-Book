@@ -6,7 +6,8 @@ import path from "path";
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
 import { db } from "./db";
-import { critiques, critiqueFindings, editorialGuidelines } from "@shared/schema";
+import { critiques, critiqueFindings, editorialGuidelines, promptsConfig } from "@shared/schema";
+import { DEFAULT_PROMPTS, type PromptsConfig, type CritiquePerspective } from "@shared/prompts";
 import { eq, desc } from "drizzle-orm";
 
 // Initialize OpenAI only if API key is available
@@ -398,8 +399,7 @@ Example: [{"category":"Structure","title":"Weak opening hook","description":"The
           const textContent = response.content.find(c => c.type === "text");
           if (textContent && textContent.type === "text") {
             try {
-              // Robust JSON parsing function with multiple fallback strategies
-              function parseRobustJSON(rawText: string): any[] {
+              const parseRobustJSON = (rawText: string): any[] => {
                 let jsonStr = rawText.trim();
                 
                 // Step 1: Remove markdown code fences
@@ -789,6 +789,72 @@ IMPORTANT: The originalSection must be an EXACT match of text from the chapter s
     } catch (error) {
       console.error("Error applying fix:", error);
       res.status(500).json({ error: "Failed to apply fix" });
+    }
+  });
+
+  // Get all prompts configuration
+  app.get("/api/prompts", async (req, res) => {
+    try {
+      const savedPrompts = await db.select().from(promptsConfig);
+      
+      const config: PromptsConfig = { ...DEFAULT_PROMPTS };
+      
+      for (const row of savedPrompts) {
+        if (row.key.startsWith("perspective_")) {
+          const perspectiveKey = row.key.replace("perspective_", "");
+          if (config.critiquePerspectives[perspectiveKey]) {
+            config.critiquePerspectives[perspectiveKey].prompt = row.value;
+          }
+        } else if (row.key === "critiqueSystemSuffix") {
+          config.critiqueSystemSuffix = row.value;
+        } else if (row.key === "fixGenerationPrompt") {
+          config.fixGenerationPrompt = row.value;
+        } else if (row.key === "chatSystemPrompt") {
+          config.chatSystemPrompt = row.value;
+        }
+      }
+      
+      res.json(config);
+    } catch (error) {
+      console.error("Error fetching prompts:", error);
+      res.json(DEFAULT_PROMPTS);
+    }
+  });
+
+  // Save a prompt
+  app.post("/api/prompts", async (req, res) => {
+    try {
+      const { key, value } = req.body;
+      
+      if (!key || typeof value !== "string") {
+        return res.status(400).json({ error: "Key and value are required" });
+      }
+      
+      const existing = await db.select().from(promptsConfig).where(eq(promptsConfig.key, key));
+      
+      if (existing.length > 0) {
+        await db.update(promptsConfig)
+          .set({ value, updatedAt: new Date() })
+          .where(eq(promptsConfig.key, key));
+      } else {
+        await db.insert(promptsConfig).values({ key, value });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error saving prompt:", error);
+      res.status(500).json({ error: "Failed to save prompt" });
+    }
+  });
+
+  // Reset prompts to defaults
+  app.post("/api/prompts/reset", async (req, res) => {
+    try {
+      await db.delete(promptsConfig);
+      res.json({ success: true, message: "Prompts reset to defaults" });
+    } catch (error) {
+      console.error("Error resetting prompts:", error);
+      res.status(500).json({ error: "Failed to reset prompts" });
     }
   });
 

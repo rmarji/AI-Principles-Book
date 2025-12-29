@@ -104,3 +104,19 @@ export const insertEditorialGuidelinesSchema = createInsertSchema(editorialGuide
 
 export type EditorialGuidelines = typeof editorialGuidelines.$inferSelect;
 export type InsertEditorialGuidelines = z.infer<typeof insertEditorialGuidelinesSchema>;
+
+// AI Prompts Configuration
+export const promptsConfig = pgTable("prompts_config", {
+  id: serial("id").primaryKey(),
+  key: text("key").notNull().unique(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const insertPromptsConfigSchema = createInsertSchema(promptsConfig).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export type PromptsConfigRow = typeof promptsConfig.$inferSelect;
+export type InsertPromptsConfig = z.infer<typeof insertPromptsConfigSchema>;

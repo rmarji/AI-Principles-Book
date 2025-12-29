@@ -1,4 +1,4 @@
-import { CheckCircle, XCircle, AlertCircle, FileText, ListChecks, BookOpen, MessageSquare, Target, Quote, HelpCircle, CheckSquare, Heart, BookMarked } from "lucide-react";
+import { CheckCircle, XCircle, AlertCircle, FileText, ListChecks, BookOpen, MessageSquare, Target, Quote, HelpCircle, CheckSquare, Heart, BookMarked, Ban } from "lucide-react";
 
 interface QualityCheck {
   id: string;
@@ -61,6 +61,11 @@ function hasConclusionSection(content: string): boolean {
   return checkSectionPresence(content, 'Conclusion') || checkSectionPresence(content, 'Chapter Summary');
 }
 
+function countEmDashes(content: string): number {
+  const emDashMatches = content.match(/—/g);
+  return emDashMatches ? emDashMatches.length : 0;
+}
+
 export function QualityChecklist({ wordCount, content, chapterId }: QualityChecklistProps) {
   const isLoading = wordCount === null || content === null;
   
@@ -94,6 +99,9 @@ export function QualityChecklist({ wordCount, content, chapterId }: QualityCheck
   const hasGoals = goalsCount >= 8 && goalsCount <= 10;
   
   const hasHabits = content ? hasHabitsSection(content) : false;
+  
+  const emDashCount = content ? countEmDashes(content) : 0;
+  const hasNoEmDashes = emDashCount === 0;
 
   const checks: QualityCheck[] = [
     {
@@ -167,6 +175,13 @@ export function QualityChecklist({ wordCount, content, chapterId }: QualityCheck
       description: hasHabits ? 'Beneficial + Detrimental' : 'Missing sections',
       passed: isLoading ? null : hasHabits,
       icon: <Heart className="w-3.5 h-3.5" />
+    },
+    {
+      id: 'em-dashes',
+      label: 'Em Dashes',
+      description: emDashCount === 0 ? 'None found' : `${emDashCount} found (remove all)`,
+      passed: isLoading ? null : hasNoEmDashes,
+      icon: <Ban className="w-3.5 h-3.5" />
     }
   ];
 

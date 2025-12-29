@@ -180,7 +180,7 @@ export default function Home() {
               <AuthorCard
                 initials="RB"
                 name="Rich Bello"
-                role="Co-Founder"
+                role="Founder"
                 company="Arootah"
                 bio="Rich brings decades of executive leadership experience from the highest levels of finance and business. He's seen firsthand how the best leaders adopt new technology — and how the rest get left behind."
                 gradient="from-indigo-500 to-purple-600"
