@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
-import { Plus, Book, Edit2, Trash2, MoreVertical, FileText, Loader2, Sparkles } from "lucide-react";
+import { Plus, Book, Edit2, Trash2, MoreVertical, FileText, Loader2, Sparkles, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import type { Book as BookType } from "@shared/schema";
 
@@ -17,12 +18,15 @@ const COVER_COLORS = [
   "#eab308", "#22c55e", "#14b8a6", "#0ea5e9", "#3b82f6"
 ];
 
+const EMPTY_BOOK = { title: "", subtitle: "", authors: "", description: "", coverColor: "#6366f1", status: "draft" };
+
 export default function Dashboard() {
   const [books, setBooks] = useState<BookType[]>([]);
   const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
-  const [newBook, setNewBook] = useState({ title: "", subtitle: "", authors: "", description: "", coverColor: "#6366f1" });
+  const [saving, setSaving] = useState(false);
+  const [formData, setFormData] = useState(EMPTY_BOOK);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingBook, setEditingBook] = useState<BookType | null>(null);
   const [seeding, setSeeding] = useState(false);
   const { toast } = useToast();
 
@@ -43,29 +47,62 @@ export default function Dashboard() {
     }
   };
 
-  const handleCreate = async () => {
-    if (!newBook.title.trim() || !newBook.authors.trim()) {
+  const openCreateDialog = () => {
+    setEditingBook(null);
+    setFormData(EMPTY_BOOK);
+    setDialogOpen(true);
+  };
+
+  const openEditDialog = (book: BookType) => {
+    setEditingBook(book);
+    setFormData({
+      title: book.title,
+      subtitle: book.subtitle || "",
+      authors: book.authors,
+      description: book.description || "",
+      coverColor: book.coverColor || "#6366f1",
+      status: book.status
+    });
+    setDialogOpen(true);
+  };
+
+  const handleSave = async () => {
+    if (!formData.title.trim() || !formData.authors.trim()) {
       toast({ title: "Required fields", description: "Title and authors are required", variant: "destructive" });
       return;
     }
-    setCreating(true);
+    setSaving(true);
     try {
-      const response = await fetch("/api/books", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newBook)
-      });
-      if (response.ok) {
-        const created = await response.json();
-        setBooks([...books, created]);
-        setNewBook({ title: "", subtitle: "", authors: "", description: "", coverColor: "#6366f1" });
-        setDialogOpen(false);
-        toast({ title: "Success", description: "Book created successfully" });
+      if (editingBook) {
+        const response = await fetch(`/api/books/${editingBook.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData)
+        });
+        if (response.ok) {
+          const updated = await response.json();
+          setBooks(books.map(b => b.id === updated.id ? updated : b));
+          toast({ title: "Updated", description: "Book updated successfully" });
+        }
+      } else {
+        const response = await fetch("/api/books", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData)
+        });
+        if (response.ok) {
+          const created = await response.json();
+          setBooks([...books, created]);
+          toast({ title: "Created", description: "Book created successfully" });
+        }
       }
+      setDialogOpen(false);
+      setEditingBook(null);
+      setFormData(EMPTY_BOOK);
     } catch (error) {
-      toast({ title: "Error", description: "Failed to create book", variant: "destructive" });
+      toast({ title: "Error", description: `Failed to ${editingBook ? 'update' : 'create'} book`, variant: "destructive" });
     } finally {
-      setCreating(false);
+      setSaving(false);
     }
   };
 
@@ -128,84 +165,108 @@ export default function Dashboard() {
                 <p className="text-sm text-muted-foreground">Create, edit, and publish your books</p>
               </div>
             </div>
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-              <DialogTrigger asChild>
-                <Button data-testid="button-create-book">
-                  <Plus className="w-4 h-4 mr-2" />
-                  New Book
+            <div className="flex items-center gap-3">
+              <Link href="/">
+                <Button variant="ghost" size="sm">
+                  <Home className="w-4 h-4 mr-2" />
+                  Home
                 </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create New Book</DialogTitle>
-                  <DialogDescription>Start a new book project</DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div>
-                    <Label htmlFor="title">Title *</Label>
-                    <Input 
-                      id="title" 
-                      value={newBook.title} 
-                      onChange={e => setNewBook({...newBook, title: e.target.value})}
-                      placeholder="The Art of Leadership"
-                      data-testid="input-book-title"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="subtitle">Subtitle</Label>
-                    <Input 
-                      id="subtitle" 
-                      value={newBook.subtitle} 
-                      onChange={e => setNewBook({...newBook, subtitle: e.target.value})}
-                      placeholder="A Modern Approach"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="authors">Authors *</Label>
-                    <Input 
-                      id="authors" 
-                      value={newBook.authors} 
-                      onChange={e => setNewBook({...newBook, authors: e.target.value})}
-                      placeholder="Jane Doe"
-                      data-testid="input-book-authors"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea 
-                      id="description" 
-                      value={newBook.description} 
-                      onChange={e => setNewBook({...newBook, description: e.target.value})}
-                      placeholder="A brief description of your book..."
-                      rows={3}
-                    />
-                  </div>
-                  <div>
-                    <Label>Cover Color</Label>
-                    <div className="flex gap-2 mt-2">
-                      {COVER_COLORS.map(color => (
-                        <button
-                          key={color}
-                          onClick={() => setNewBook({...newBook, coverColor: color})}
-                          className={`w-8 h-8 rounded-full transition-all ${newBook.coverColor === color ? 'ring-2 ring-offset-2 ring-primary' : ''}`}
-                          style={{ backgroundColor: color }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-                  <Button onClick={handleCreate} disabled={creating} data-testid="button-submit-book">
-                    {creating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                    Create Book
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+              </Link>
+              <Button onClick={openCreateDialog} data-testid="button-create-book">
+                <Plus className="w-4 h-4 mr-2" />
+                New Book
+              </Button>
+            </div>
           </div>
         </div>
       </header>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingBook ? "Edit Book" : "Create New Book"}</DialogTitle>
+            <DialogDescription>{editingBook ? "Update your book details" : "Start a new book project"}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="title">Title *</Label>
+              <Input 
+                id="title" 
+                value={formData.title} 
+                onChange={e => setFormData({...formData, title: e.target.value})}
+                placeholder="The Art of Leadership"
+                data-testid="input-book-title"
+              />
+            </div>
+            <div>
+              <Label htmlFor="subtitle">Subtitle</Label>
+              <Input 
+                id="subtitle" 
+                value={formData.subtitle} 
+                onChange={e => setFormData({...formData, subtitle: e.target.value})}
+                placeholder="A Modern Approach"
+              />
+            </div>
+            <div>
+              <Label htmlFor="authors">Authors *</Label>
+              <Input 
+                id="authors" 
+                value={formData.authors} 
+                onChange={e => setFormData({...formData, authors: e.target.value})}
+                placeholder="Jane Doe"
+                data-testid="input-book-authors"
+              />
+            </div>
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Textarea 
+                id="description" 
+                value={formData.description} 
+                onChange={e => setFormData({...formData, description: e.target.value})}
+                placeholder="A brief description of your book..."
+                rows={3}
+              />
+            </div>
+            {editingBook && (
+              <div>
+                <Label htmlFor="status">Status</Label>
+                <Select value={formData.status} onValueChange={val => setFormData({...formData, status: val})}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="editing">Editing</SelectItem>
+                    <SelectItem value="review">Review</SelectItem>
+                    <SelectItem value="published">Published</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div>
+              <Label>Cover Color</Label>
+              <div className="flex gap-2 mt-2">
+                {COVER_COLORS.map(color => (
+                  <button
+                    key={color}
+                    type="button"
+                    onClick={() => setFormData({...formData, coverColor: color})}
+                    className={`w-8 h-8 rounded-full transition-all ${formData.coverColor === color ? 'ring-2 ring-offset-2 ring-primary' : ''}`}
+                    style={{ backgroundColor: color }}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleSave} disabled={saving} data-testid="button-submit-book">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              {editingBook ? "Save Changes" : "Create Book"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <main className="max-w-7xl mx-auto px-6 py-8">
         {books.length === 0 ? (
@@ -220,7 +281,7 @@ export default function Dashboard() {
                 {seeding ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <FileText className="w-4 h-4 mr-2" />}
                 Import Sample Book
               </Button>
-              <Button onClick={() => setDialogOpen(true)}>
+              <Button onClick={openCreateDialog}>
                 <Plus className="w-4 h-4 mr-2" />
                 Create New Book
               </Button>
@@ -245,11 +306,9 @@ export default function Dashboard() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem asChild>
-                          <Link href={`/book/${book.id}`}>
-                            <Edit2 className="w-4 h-4 mr-2" />
-                            Edit
-                          </Link>
+                        <DropdownMenuItem onClick={() => openEditDialog(book)} data-testid={`button-edit-book-${book.id}`}>
+                          <Edit2 className="w-4 h-4 mr-2" />
+                          Edit Details
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           className="text-destructive"

@@ -51,8 +51,20 @@ The server provides:
 
 Uses Drizzle ORM with PostgreSQL configuration:
 - `users` table with id, username, and password fields
-- Currently uses in-memory storage (`MemStorage`) as the active implementation
+- `books` table for managing multiple books (title, subtitle, authors, description, coverColor, status, isDefault)
+- `chapters` table linked to books via bookId (title, chapterNumber, content, status)
 - Database schema defined in `shared/schema.ts`
+
+### Multibook Foundation (Phase 1)
+
+The application now supports a multibook architecture foundation:
+- **Dashboard** at `/dashboard` for creating, editing, and deleting books
+- **Book API endpoints**: GET/POST/PATCH/DELETE for `/api/books` and `/api/books/:id`
+- **Chapter API endpoints**: CRUD operations at `/api/books/:bookId/chapters`
+- **Routes prepared**: `/book/:bookId` and `/book/:bookId/chapter/:id` routes exist but currently fall back to default book content
+- **Migration endpoint**: POST `/api/migrate/seed-default-book` seeds the existing book from markdown files
+
+Note: Full multi-book content rendering (TableOfContents and Chapter respecting bookId) is Phase 2 work. Currently, the default book uses the legacy file-based system while new books can be created/edited via the Dashboard.
 
 ### Build and Development
 
