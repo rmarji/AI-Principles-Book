@@ -6,7 +6,7 @@ import path from "path";
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
 import { db } from "./db";
-import { critiques, critiqueFindings, editorialGuidelines, promptsConfig, books, chapters, insertBookSchema, insertChapterSchema } from "@shared/schema";
+import { critiques, critiqueFindings, editorialGuidelines, promptsConfig, books, chapters, outlineSections, insertBookSchema, insertChapterSchema, insertOutlineSectionSchema } from "@shared/schema";
 import { DEFAULT_PROMPTS, type PromptsConfig, type CritiquePerspective } from "@shared/prompts";
 import { eq, desc, asc } from "drizzle-orm";
 
@@ -297,7 +297,7 @@ export async function registerRoutes(
   app.post("/api/books/:bookId/chapters/generate", async (req, res) => {
     try {
       const bookId = parseInt(req.params.bookId);
-      const { prompt, title, context } = req.body;
+      const { prompt, title, context, outlineSectionId } = req.body;
       
       if (!prompt) {
         return res.status(400).json({ error: "Prompt is required" });
@@ -310,9 +310,31 @@ export async function registerRoutes(
       }
       const bookInfo = book[0];
 
+      // Get outline sections for context
+      const allOutlineSections = await db.select().from(outlineSections)
+        .where(eq(outlineSections.bookId, bookId))
+        .orderBy(asc(outlineSections.sortOrder));
+
+      let outlineContext = '';
+      let sectionGuidance = '';
+      
+      if (allOutlineSections.length > 0) {
+        outlineContext = `\n\nBook Outline:\n${allOutlineSections.map((s, i) => `${i + 1}. ${s.title}: ${s.summary || ''}`).join('\n')}`;
+        
+        // If a specific outline section is selected, include its guidance
+        if (outlineSectionId) {
+          const section = allOutlineSections.find(s => s.id === outlineSectionId);
+          if (section) {
+            sectionGuidance = `\n\nYou are writing Chapter ${section.sortOrder + 1}: "${section.title}"
+${section.summary ? `Chapter summary: ${section.summary}` : ''}
+${section.guidanceNotes ? `Writing guidance: ${section.guidanceNotes}` : ''}`;
+          }
+        }
+      }
+
       const systemPrompt = `You are an expert author and content writer. You are writing content for a book titled "${bookInfo.title}"${bookInfo.subtitle ? ` (${bookInfo.subtitle})` : ''} by ${bookInfo.authors}.
 
-${bookInfo.description ? `Book description: ${bookInfo.description}` : ''}
+${bookInfo.description ? `Book description: ${bookInfo.description}` : ''}${outlineContext}${sectionGuidance}
 
 Write engaging, professional book chapter content in Markdown format. Include:
 - Clear headings and subheadings (use ## for main sections, ### for subsections)
@@ -342,6 +364,215 @@ Write the full chapter content based on the user's request. Do not include a tit
     } catch (error) {
       console.error("Error generating chapter:", error);
       res.status(500).json({ error: "Failed to generate chapter content" });
+    }
+  });
+
+  // ===== OUTLINE SECTIONS API =====
+  
+  // Get outline sections for a book
+  app.get("/api/books/:bookId/outline", async (req, res) => {
+    try {
+      const bookId = parseInt(req.params.bookId);
+      const sections = await db.select().from(outlineSections)
+        .where(eq(outlineSections.bookId, bookId))
+        .orderBy(asc(outlineSections.sortOrder));
+      res.json(sections);
+    } catch (error) {
+      console.error("Error fetching outline:", error);
+      res.status(500).json({ error: "Failed to fetch outline" });
+    }
+  });
+
+  // Create outline section
+  app.post("/api/books/:bookId/outline", async (req, res) => {
+    try {
+      const bookId = parseInt(req.params.bookId);
+      const sectionData = { ...req.body, bookId };
+      const parsed = insertOutlineSectionSchema.safeParse(sectionData);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid outline section data", details: parsed.error });
+      }
+      const newSection = await db.insert(outlineSections).values(parsed.data).returning();
+      res.status(201).json(newSection[0]);
+    } catch (error) {
+      console.error("Error creating outline section:", error);
+      res.status(500).json({ error: "Failed to create outline section" });
+    }
+  });
+
+  // Update outline section
+  app.patch("/api/books/:bookId/outline/:sectionId", async (req, res) => {
+    try {
+      const sectionId = parseInt(req.params.sectionId);
+      const updatedSection = await db.update(outlineSections)
+        .set(req.body)
+        .where(eq(outlineSections.id, sectionId))
+        .returning();
+      if (updatedSection.length === 0) {
+        return res.status(404).json({ error: "Section not found" });
+      }
+      res.json(updatedSection[0]);
+    } catch (error) {
+      console.error("Error updating outline section:", error);
+      res.status(500).json({ error: "Failed to update outline section" });
+    }
+  });
+
+  // Delete outline section
+  app.delete("/api/books/:bookId/outline/:sectionId", async (req, res) => {
+    try {
+      const sectionId = parseInt(req.params.sectionId);
+      const deleted = await db.delete(outlineSections).where(eq(outlineSections.id, sectionId)).returning();
+      if (deleted.length === 0) {
+        return res.status(404).json({ error: "Section not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting outline section:", error);
+      res.status(500).json({ error: "Failed to delete outline section" });
+    }
+  });
+
+  // Generate outline with AI
+  app.post("/api/books/:bookId/outline/generate", async (req, res) => {
+    try {
+      const bookId = parseInt(req.params.bookId);
+      const { chapterCount, additionalGuidance } = req.body;
+      
+      // Get book info
+      const book = await db.select().from(books).where(eq(books.id, bookId));
+      if (book.length === 0) {
+        return res.status(404).json({ error: "Book not found" });
+      }
+      const bookInfo = book[0];
+
+      const systemPrompt = `You are an expert book outline creator and publishing consultant. Create a structured book outline that will guide chapter creation.
+
+Output a JSON array of chapter entries. Each entry should have:
+- "title": The chapter title
+- "summary": A 2-3 sentence description of what this chapter covers
+- "guidanceNotes": Specific guidance for writing this chapter (key points to cover, examples to include, tone suggestions)
+
+Create exactly ${chapterCount || 10} chapters that build logically upon each other.`;
+
+      const userPrompt = `Create an outline for a book titled "${bookInfo.title}"${bookInfo.subtitle ? ` with subtitle "${bookInfo.subtitle}"` : ''} by ${bookInfo.authors}.
+
+${bookInfo.description ? `Book description: ${bookInfo.description}` : ''}
+
+${additionalGuidance ? `Additional author guidance: ${additionalGuidance}` : ''}
+
+Return ONLY a valid JSON array of chapter objects. No other text.`;
+
+      const message = await anthropic.messages.create({
+        model: "claude-sonnet-4-5",
+        max_tokens: 4000,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userPrompt }]
+      });
+
+      const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
+      
+      // Parse JSON from response
+      let outlineData;
+      try {
+        const jsonMatch = responseText.match(/\[[\s\S]*\]/);
+        outlineData = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
+      } catch {
+        return res.status(500).json({ error: "Failed to parse AI response", raw: responseText });
+      }
+
+      // Clear existing outline sections for this book
+      await db.delete(outlineSections).where(eq(outlineSections.bookId, bookId));
+
+      // Insert new sections
+      const createdSections = [];
+      for (let i = 0; i < outlineData.length; i++) {
+        const section = outlineData[i];
+        const [created] = await db.insert(outlineSections).values({
+          bookId,
+          sortOrder: i,
+          title: section.title,
+          summary: section.summary,
+          guidanceNotes: section.guidanceNotes,
+          aiGenerated: true
+        }).returning();
+        createdSections.push(created);
+      }
+
+      // Update book with outline summary
+      const outlineSummary = outlineData.map((s: { title: string }, i: number) => `${i + 1}. ${s.title}`).join('\n');
+      await db.update(books)
+        .set({ outlineSummary, updatedAt: new Date() })
+        .where(eq(books.id, bookId));
+
+      res.json({ 
+        sections: createdSections,
+        summary: outlineSummary
+      });
+    } catch (error) {
+      console.error("Error generating outline:", error);
+      res.status(500).json({ error: "Failed to generate outline" });
+    }
+  });
+
+  // Generate book cover prompt with AI
+  app.post("/api/books/:bookId/cover-prompt/generate", async (req, res) => {
+    try {
+      const bookId = parseInt(req.params.bookId);
+      
+      // Get book info with outline
+      const book = await db.select().from(books).where(eq(books.id, bookId));
+      if (book.length === 0) {
+        return res.status(404).json({ error: "Book not found" });
+      }
+      const bookInfo = book[0];
+
+      // Get outline sections for context
+      const sections = await db.select().from(outlineSections)
+        .where(eq(outlineSections.bookId, bookId))
+        .orderBy(asc(outlineSections.sortOrder));
+
+      const outlineContext = sections.length > 0 
+        ? `\n\nBook chapters:\n${sections.map((s, i) => `${i + 1}. ${s.title}: ${s.summary}`).join('\n')}`
+        : '';
+
+      const systemPrompt = `You are an expert book cover designer and art director. Create a detailed image generation prompt for a professional book cover.
+
+Your prompt should describe:
+- Visual style (illustration, photography, abstract, minimalist, etc.)
+- Color palette and mood
+- Key visual elements and composition
+- Typography style suggestions
+- Overall aesthetic that matches the book's themes
+
+The prompt should be suitable for AI image generation tools like DALL-E, Midjourney, or Stable Diffusion.`;
+
+      const userPrompt = `Create a book cover image prompt for:
+
+Title: "${bookInfo.title}"${bookInfo.subtitle ? `\nSubtitle: "${bookInfo.subtitle}"` : ''}
+Authors: ${bookInfo.authors}
+${bookInfo.description ? `Description: ${bookInfo.description}` : ''}${outlineContext}
+
+Return ONLY the image generation prompt, nothing else. Make it detailed and specific.`;
+
+      const message = await anthropic.messages.create({
+        model: "claude-sonnet-4-5",
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userPrompt }]
+      });
+
+      const coverPrompt = message.content[0].type === 'text' ? message.content[0].text : '';
+      
+      // Save the cover prompt to the book
+      await db.update(books)
+        .set({ coverPrompt, updatedAt: new Date() })
+        .where(eq(books.id, bookId));
+
+      res.json({ coverPrompt });
+    } catch (error) {
+      console.error("Error generating cover prompt:", error);
+      res.status(500).json({ error: "Failed to generate cover prompt" });
     }
   });
 

@@ -11,6 +11,8 @@ export const books = pgTable("books", {
   authors: text("authors").notNull(),
   description: text("description"),
   coverColor: text("cover_color").default("#6366f1"),
+  coverPrompt: text("cover_prompt"),
+  outlineSummary: text("outline_summary"),
   status: text("status").notNull().default("draft"), // draft, editing, review, published
   isDefault: boolean("is_default").default(false),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
@@ -49,6 +51,26 @@ export const insertChapterSchema = createInsertSchema(chapters).omit({
 
 export type Chapter = typeof chapters.$inferSelect;
 export type InsertChapter = z.infer<typeof insertChapterSchema>;
+
+// Book Outline Sections - structured outline entries for guiding chapter creation
+export const outlineSections = pgTable("outline_sections", {
+  id: serial("id").primaryKey(),
+  bookId: integer("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
+  sortOrder: integer("sort_order").notNull().default(0),
+  title: text("title").notNull(),
+  summary: text("summary"),
+  guidanceNotes: text("guidance_notes"),
+  aiGenerated: boolean("ai_generated").default(false),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const insertOutlineSectionSchema = createInsertSchema(outlineSections).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type OutlineSection = typeof outlineSections.$inferSelect;
+export type InsertOutlineSection = z.infer<typeof insertOutlineSectionSchema>;
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

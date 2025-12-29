@@ -2,6 +2,7 @@ import {
   type User, type InsertUser,
   type Book, type InsertBook, books,
   type Chapter, type InsertChapter, chapters,
+  type OutlineSection, type InsertOutlineSection, outlineSections,
   users
 } from "@shared/schema";
 import { db } from "./db";
@@ -27,6 +28,14 @@ export interface IStorage {
   createChapter(chapter: InsertChapter): Promise<Chapter>;
   updateChapter(id: number, chapter: Partial<InsertChapter>): Promise<Chapter | undefined>;
   deleteChapter(id: number): Promise<boolean>;
+  
+  // Outline Sections
+  getOutlineSectionsByBook(bookId: number): Promise<OutlineSection[]>;
+  getOutlineSection(id: number): Promise<OutlineSection | undefined>;
+  createOutlineSection(section: InsertOutlineSection): Promise<OutlineSection>;
+  updateOutlineSection(id: number, section: Partial<InsertOutlineSection>): Promise<OutlineSection | undefined>;
+  deleteOutlineSection(id: number): Promise<boolean>;
+  deleteOutlineSectionsByBook(bookId: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -112,6 +121,41 @@ export class DatabaseStorage implements IStorage {
   async deleteChapter(id: number): Promise<boolean> {
     const result = await db.delete(chapters).where(eq(chapters.id, id)).returning();
     return result.length > 0;
+  }
+
+  // Outline Sections
+  async getOutlineSectionsByBook(bookId: number): Promise<OutlineSection[]> {
+    return db.select().from(outlineSections)
+      .where(eq(outlineSections.bookId, bookId))
+      .orderBy(asc(outlineSections.sortOrder));
+  }
+
+  async getOutlineSection(id: number): Promise<OutlineSection | undefined> {
+    const result = await db.select().from(outlineSections).where(eq(outlineSections.id, id));
+    return result[0];
+  }
+
+  async createOutlineSection(section: InsertOutlineSection): Promise<OutlineSection> {
+    const result = await db.insert(outlineSections).values(section).returning();
+    return result[0];
+  }
+
+  async updateOutlineSection(id: number, section: Partial<InsertOutlineSection>): Promise<OutlineSection | undefined> {
+    const result = await db.update(outlineSections)
+      .set(section)
+      .where(eq(outlineSections.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteOutlineSection(id: number): Promise<boolean> {
+    const result = await db.delete(outlineSections).where(eq(outlineSections.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async deleteOutlineSectionsByBook(bookId: number): Promise<boolean> {
+    const result = await db.delete(outlineSections).where(eq(outlineSections.bookId, bookId)).returning();
+    return result.length >= 0;
   }
 }
 
