@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Sparkles, User, ArrowRight, Loader2 } from "lucide-react";
+import { DEFAULT_PROMPTS, type PromptsConfig } from "@shared/prompts";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -17,7 +18,27 @@ export function AIDiscussion({ chapterId, chapterTitle, chapterContent }: AIDisc
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [streamingContent, setStreamingContent] = useState('');
+  const [chatSystemPrompt, setChatSystemPrompt] = useState(DEFAULT_PROMPTS.chatSystemPrompt);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const fetchPrompts = () => {
+    fetch('/api/prompts')
+      .then(res => res.json())
+      .then((data: PromptsConfig) => {
+        if (data.chatSystemPrompt) {
+          setChatSystemPrompt(data.chatSystemPrompt);
+        }
+      })
+      .catch(console.error);
+  };
+
+  useEffect(() => {
+    fetchPrompts();
+    
+    const handlePromptsUpdated = () => fetchPrompts();
+    window.addEventListener('prompts-updated', handlePromptsUpdated);
+    return () => window.removeEventListener('prompts-updated', handlePromptsUpdated);
+  }, []);
 
   useEffect(() => {
     setMessages([]);
@@ -46,13 +67,15 @@ export function AIDiscussion({ chapterId, chapterTitle, chapterContent }: AIDisc
 
     try {
       const systemContext = chapterContent 
-        ? `You are an AI assistant helping readers understand "${chapterTitle}" from "The Leader's Guide to AI Teams" by Rayo Marji. 
-           Use the chapter content to answer questions accurately and provide helpful insights.
-           Keep responses concise but informative. Reference specific concepts from the chapter when relevant.
-           
-           Chapter content summary (first 3000 chars):
-           ${chapterContent.substring(0, 3000)}...`
-        : `You are an AI assistant helping readers understand "${chapterTitle}" from "The Leader's Guide to AI Teams" by Rayo Marji.`;
+        ? `${chatSystemPrompt}
+
+You are currently assisting with the chapter: "${chapterTitle}"
+
+Chapter content summary (first 3000 chars):
+${chapterContent.substring(0, 3000)}...`
+        : `${chatSystemPrompt}
+
+You are currently assisting with the chapter: "${chapterTitle}"`;
 
       const response = await fetch('/api/chat', {
         method: 'POST',

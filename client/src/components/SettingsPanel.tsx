@@ -145,6 +145,7 @@ export function SettingsPanel() {
       
       if (response.ok) {
         setSaved(prev => ({ ...prev, [key]: true }));
+        window.dispatchEvent(new CustomEvent('prompts-updated'));
         toast({
           title: "Saved",
           description: "Prompt updated successfully"
@@ -170,6 +171,7 @@ export function SettingsPanel() {
       if (response.ok) {
         await fetchPrompts();
         setSaved({});
+        window.dispatchEvent(new CustomEvent('prompts-updated'));
         toast({
           title: "Reset Complete",
           description: "All prompts restored to defaults"
