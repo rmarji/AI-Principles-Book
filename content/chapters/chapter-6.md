@@ -1,13 +1,13 @@
 # Principle 6: Aligned Decisions at Scale
 
 > "The quality of decision is like the well-timed swoop of a falcon which enables it to strike and destroy its victim."
-> — Sun Tzu, *The Art of War*
+> - Sun Tzu, *The Art of War*
 
-Leaders are paid to make decisions. Everything else—the meetings, the emails, the reports, the strategic sessions—exists to inform and implement decisions. The quality of our decisions determines the trajectory of our organizations. If AI agents can improve our decision-making, they touch the most valuable part of leadership work.
+Leaders are paid to make decisions. Everything else-the meetings, the emails, the reports, the strategic sessions-exists to inform and implement decisions. The quality of our decisions determines the trajectory of our organizations. If AI agents can improve our decision-making, they touch the most valuable part of leadership work.
 
 In Chapters 4 and 5, we learned to audit our work, automate the delegable parts, and design the transitions that make automation reliable. But what do we do with the time and cognitive capacity we reclaim? The answer is: make better decisions.
 
-This principle explores how AI can help leaders make **aligned decisions at scale**—decisions that are:
+This principle explores how AI can help leaders make **aligned decisions at scale**-decisions that are:
 - **Aligned** with organizational values, strategic goals, and stakeholder needs
 - **Structured** using frameworks that reduce bias and improve consistency
 - **Scalable** so quality decisions happen across more situations, faster
@@ -524,7 +524,7 @@ The decision support capabilities we have explored represent the first generatio
 
 **Agents That Learn Your Decision Patterns**
 
-Future decision agents will develop deep understanding of your individual decision style—where your intuitions are reliably excellent, where your blind spots consistently appear, what types of information you find most persuasive. This personalized calibration will enable increasingly targeted support that strengthens where you are weak without interfering where you are strong.
+Future decision agents will develop deep understanding of your individual decision style-where your intuitions are reliably excellent, where your blind spots consistently appear, what types of information you find most persuasive. This personalized calibration will enable increasingly targeted support that strengthens where you are weak without interfering where you are strong.
 
 **Predictive Decision Support**
 
@@ -713,7 +713,7 @@ Stone, Brad. *The Everything Store: Jeff Bezos and the Age of Amazon*. Little, B
 
 **Chapter Keywords:** Decision intelligence, AI-assisted decision-making, cognitive bias mitigation, scenario planning, devil's advocate protocols, decision frameworks, systematic learning, research agents, analysis agents, decision quality framework, strategic decision-making, operational decision-making, decision velocity, reversibility assessment, decision journals, pre-mortem analysis, red team protocols, real-time decision support, ethical AI use, data-driven leadership
 
-**Key Framework:** The Decision Quality Framework with six essential elements—appropriate frame, creative alternatives, meaningful information, clear values and tradeoffs, sound reasoning, and commitment to action—supported by AI agents that provide research, analysis, challenge, scenario planning, and systematic learning from outcomes.
+**Key Framework:** The Decision Quality Framework with six essential elements-appropriate frame, creative alternatives, meaningful information, clear values and tradeoffs, sound reasoning, and commitment to action-supported by AI agents that provide research, analysis, challenge, scenario planning, and systematic learning from outcomes.
 
 **Core Takeaways:** AI agents transform decision-making by expanding the bounds of rationality through comprehensive research, rigorous analysis, systematic challenge, and outcome tracking that enables learning. The advantage comes not from replacing human judgment but from augmenting it with capabilities that exceed human speed, scale, and consistency while maintaining human accountability for decisions.
 

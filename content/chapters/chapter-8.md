@@ -1,11 +1,11 @@
 # Principle 8: Collaborate, Don't Abdicate
 
 > "The future of work is not human or machine, but human and machine, working in concert."
-> — Erik Brynjolfsson and Andrew McAfee, MIT
+> - Erik Brynjolfsson and Andrew McAfee, MIT
 
-Your value is not threatened by AI—it is clarified. The capabilities that made you valuable before AI remain valuable; they are simply now directed differently. The question is not whether AI will change your work but how you will partner with AI without losing what makes you irreplaceable.
+Your value is not threatened by AI-it is clarified. The capabilities that made you valuable before AI remain valuable; they are simply now directed differently. The question is not whether AI will change your work but how you will partner with AI without losing what makes you irreplaceable.
 
-In Chapter 7, we explored how to clone your best self through multiplication—extending your presence across more contexts through AI agents that carry your intentions. But multiplication without collaboration becomes abdication. If you delegate without remaining genuinely engaged, you lose the judgment, relationships, and insight that made your direction valuable in the first place.
+In Chapter 7, we explored how to clone your best self through multiplication-extending your presence across more contexts through AI agents that carry your intentions. But multiplication without collaboration becomes abdication. If you delegate without remaining genuinely engaged, you lose the judgment, relationships, and insight that made your direction valuable in the first place.
 
 This chapter explores the art of collaboration: partnering with AI effectively while preserving what makes you uniquely valuable. We will examine the comparative advantage framework that reveals what humans and AI each do best, the collaboration patterns that combine these strengths, and the practices that ensure you collaborate rather than abdicate.
 
@@ -97,7 +97,7 @@ Team-level agents provide several functions. Team research agents are accessible
 
 Shared agents create efficiency by consolidating capability rather than duplicating across individual users. They build more comprehensive knowledge by learning from multiple team members' interactions. They ensure consistency in how the team operates and accesses information. They reduce overall costs compared to individual agents with overlapping functions.
 
-However, shared agents require governance structures that individual agents do not. Configuration and maintenance responsibility must be clearly assigned—who decides how the agent is set up, what policies it follows, and how it gets updated? Access permissions need specification—can all team members access all agent functions, or are there permission tiers based on role or seniority? Conflict resolution procedures address what happens when team members give the agent contradictory instructions or have competing priorities. Quality accountability determines who is responsible for monitoring agent performance and addressing issues (Daugherty and Wilson 184).
+However, shared agents require governance structures that individual agents do not. Configuration and maintenance responsibility must be clearly assigned-who decides how the agent is set up, what policies it follows, and how it gets updated? Access permissions need specification-can all team members access all agent functions, or are there permission tiers based on role or seniority? Conflict resolution procedures address what happens when team members give the agent contradictory instructions or have competing priorities. Quality accountability determines who is responsible for monitoring agent performance and addressing issues (Daugherty and Wilson 184).
 
 Effective governance typically assigns a team member as agent steward, responsible for configuration decisions and serving as the escalation point for issues. The steward ensures the agent serves team needs effectively, gathers feedback about agent performance, makes adjustments based on evolving requirements, and communicates with team members about agent capabilities and changes (Brynjolfsson, Rock, and Syverson 38). Larger teams might form an agent governance committee to share stewardship responsibilities and ensure diverse perspectives inform agent management.
 
@@ -125,7 +125,7 @@ Teams operating in human-AI hybrid modes need updated communication norms that a
 
 Transparency norms address when and how to disclose AI agent involvement. General practice suggests disclosing when agents produce work that affects other people, when asked directly about whether AI assisted with something, or when there is potential for confusion about human versus AI contribution. Disclosure builds trust and sets appropriate expectations about how work was produced (Daugherty and Wilson 198). Some communications should always be human-generated, particularly those involving sensitive topics, difficult conversations, personal recognition, or high-stakes relationship moments. Team norms specify which communication types require explicit human authorship and which allow agent assistance or drafting.
 
-Attribution practices clarify credit and responsibility in human-AI collaboration. When agents contribute substantially to work products, how should that be acknowledged? Some teams adopt language like "prepared with AI assistance" or "AI-assisted analysis" to indicate agent involvement without overstating it. Attribution matters particularly for learning and development—if a junior team member submits impressive work largely produced by an agent, leaders need to know the actual contribution to provide appropriate feedback and growth opportunities (Wilson and Daugherty 91).
+Attribution practices clarify credit and responsibility in human-AI collaboration. When agents contribute substantially to work products, how should that be acknowledged? Some teams adopt language like "prepared with AI assistance" or "AI-assisted analysis" to indicate agent involvement without overstating it. Attribution matters particularly for learning and development-if a junior team member submits impressive work largely produced by an agent, leaders need to know the actual contribution to provide appropriate feedback and growth opportunities (Wilson and Daugherty 91).
 
 Response timing expectations shift in human-AI environments. Agents enable much faster response to routine requests, but human judgment still takes time. Team norms differentiate between agent-appropriate rapid responses and human deliberation that requires patience. Setting these expectations prevents frustration when a colleague does not immediately respond to something that seems simple but actually requires thought (Malone 253).
 
@@ -321,11 +321,11 @@ Rather than waiting for you to initiate, agents will proactively propose collabo
 
 **Emotional Intelligence in Collaboration**
 
-Future agents will read emotional signals more effectively—detecting frustration, enthusiasm, or fatigue and adjusting their collaboration style accordingly. When you are energized and creative, agents might offer more options and possibilities. When you are tired or stressed, they might streamline to essentials. This emotional attunement will make collaboration more natural and effective.
+Future agents will read emotional signals more effectively-detecting frustration, enthusiasm, or fatigue and adjusting their collaboration style accordingly. When you are energized and creative, agents might offer more options and possibilities. When you are tired or stressed, they might streamline to essentials. This emotional attunement will make collaboration more natural and effective.
 
 **The Evolution of the Centaur Model**
 
-The Centaur model—half human, half machine—describes today's human-AI collaboration. But as agent capabilities expand, the balance will shift. The human contribution will increasingly focus on values, relationships, and judgment while agents handle ever more of the execution. Understanding this evolution helps you prepare for what collaboration will become.
+The Centaur model-half human, half machine-describes today's human-AI collaboration. But as agent capabilities expand, the balance will shift. The human contribution will increasingly focus on values, relationships, and judgment while agents handle ever more of the execution. Understanding this evolution helps you prepare for what collaboration will become.
 
 **Preparing for Deeper Partnership**
 
@@ -340,17 +340,17 @@ The leaders who collaborate most effectively today build the foundation for deep
 
 ## Conclusion
 
-Collaborate, Don't Abdicate captures the essential discipline of AI-enabled leadership. Your value is not threatened by AI—it is clarified. The capabilities that made you valuable remain valuable; they are simply now directed differently. The challenge is partnering effectively while preserving what makes you irreplaceable.
+Collaborate, Don't Abdicate captures the essential discipline of AI-enabled leadership. Your value is not threatened by AI-it is clarified. The capabilities that made you valuable remain valuable; they are simply now directed differently. The challenge is partnering effectively while preserving what makes you irreplaceable.
 
-The foundation rests on comparative advantage—assigning tasks based on who or what performs them best rather than defaulting to automation wherever technically feasible. Humans bring judgment, creativity, relationship skills, and ethical reasoning. AI brings information processing power, consistency, availability, and pattern recognition at scale. Effective collaboration leverages both.
+The foundation rests on comparative advantage-assigning tasks based on who or what performs them best rather than defaulting to automation wherever technically feasible. Humans bring judgment, creativity, relationship skills, and ethical reasoning. AI brings information processing power, consistency, availability, and pattern recognition at scale. Effective collaboration leverages both.
 
-The six collaboration patterns—AI Prepares/Human Decides, Human Initiates/AI Executes, AI Monitors/Human Intervenes, Human Creates/AI Refines, AI Creates/Human Reviews, and Collaborative Iteration—provide templates for combining human and AI strengths. Choosing the right pattern for each situation maximizes the value of both contributors.
+The six collaboration patterns-AI Prepares/Human Decides, Human Initiates/AI Executes, AI Monitors/Human Intervenes, Human Creates/AI Refines, AI Creates/Human Reviews, and Collaborative Iteration-provide templates for combining human and AI strengths. Choosing the right pattern for each situation maximizes the value of both contributors.
 
 Preserving human connection remains essential. Some interactions should never be delegated: personal check-ins, difficult conversations, recognition moments, and high-stakes communications. AI should enable more and better human connection, not replace it.
 
 Practical implementation requires deliberate workflow design with explicit handoffs, clear communication protocols, and robust exception handling. Change management addresses concerns, builds skills, and creates the culture for successful collaboration. Measurement across efficiency, quality, experience, and impact enables continuous improvement.
 
-In the next chapter, we scale these principles from individual and team collaboration to organizational transformation. The same insights that enable effective personal collaboration—comparative advantage, thoughtful patterns, preserved humanity—inform how leaders architect entire organizations for the AI era.
+In the next chapter, we scale these principles from individual and team collaboration to organizational transformation. The same insights that enable effective personal collaboration-comparative advantage, thoughtful patterns, preserved humanity-inform how leaders architect entire organizations for the AI era.
 
 ## Summary
 

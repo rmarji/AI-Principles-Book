@@ -6,9 +6,9 @@ import path from "path";
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
 import { db } from "./db";
-import { critiques, critiqueFindings, editorialGuidelines, promptsConfig } from "@shared/schema";
+import { critiques, critiqueFindings, editorialGuidelines, promptsConfig, books, chapters, insertBookSchema, insertChapterSchema } from "@shared/schema";
 import { DEFAULT_PROMPTS, type PromptsConfig, type CritiquePerspective } from "@shared/prompts";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, asc } from "drizzle-orm";
 
 // Initialize OpenAI only if API key is available
 const apiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
@@ -122,6 +122,246 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  // ===== BOOKS API =====
+  
+  // Get all books
+  app.get("/api/books", async (_req, res) => {
+    try {
+      const allBooks = await db.select().from(books).orderBy(asc(books.createdAt));
+      res.json(allBooks);
+    } catch (error) {
+      console.error("Error fetching books:", error);
+      res.status(500).json({ error: "Failed to fetch books" });
+    }
+  });
+
+  // Get single book
+  app.get("/api/books/:id", async (req, res) => {
+    try {
+      const bookId = parseInt(req.params.id);
+      const book = await db.select().from(books).where(eq(books.id, bookId));
+      if (book.length === 0) {
+        return res.status(404).json({ error: "Book not found" });
+      }
+      res.json(book[0]);
+    } catch (error) {
+      console.error("Error fetching book:", error);
+      res.status(500).json({ error: "Failed to fetch book" });
+    }
+  });
+
+  // Get default book
+  app.get("/api/books/default", async (_req, res) => {
+    try {
+      const defaultBook = await db.select().from(books).where(eq(books.isDefault, true));
+      if (defaultBook.length === 0) {
+        return res.status(404).json({ error: "No default book found" });
+      }
+      res.json(defaultBook[0]);
+    } catch (error) {
+      console.error("Error fetching default book:", error);
+      res.status(500).json({ error: "Failed to fetch default book" });
+    }
+  });
+
+  // Create book
+  app.post("/api/books", async (req, res) => {
+    try {
+      const parsed = insertBookSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid book data", details: parsed.error });
+      }
+      const newBook = await db.insert(books).values(parsed.data).returning();
+      res.status(201).json(newBook[0]);
+    } catch (error) {
+      console.error("Error creating book:", error);
+      res.status(500).json({ error: "Failed to create book" });
+    }
+  });
+
+  // Update book
+  app.patch("/api/books/:id", async (req, res) => {
+    try {
+      const bookId = parseInt(req.params.id);
+      const updatedBook = await db.update(books)
+        .set({ ...req.body, updatedAt: new Date() })
+        .where(eq(books.id, bookId))
+        .returning();
+      if (updatedBook.length === 0) {
+        return res.status(404).json({ error: "Book not found" });
+      }
+      res.json(updatedBook[0]);
+    } catch (error) {
+      console.error("Error updating book:", error);
+      res.status(500).json({ error: "Failed to update book" });
+    }
+  });
+
+  // Delete book
+  app.delete("/api/books/:id", async (req, res) => {
+    try {
+      const bookId = parseInt(req.params.id);
+      const deleted = await db.delete(books).where(eq(books.id, bookId)).returning();
+      if (deleted.length === 0) {
+        return res.status(404).json({ error: "Book not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting book:", error);
+      res.status(500).json({ error: "Failed to delete book" });
+    }
+  });
+
+  // ===== BOOK CHAPTERS API (database-backed) =====
+  
+  // Get chapters for a book
+  app.get("/api/books/:bookId/chapters", async (req, res) => {
+    try {
+      const bookId = parseInt(req.params.bookId);
+      const bookChapters = await db.select().from(chapters)
+        .where(eq(chapters.bookId, bookId))
+        .orderBy(asc(chapters.sortOrder));
+      res.json(bookChapters);
+    } catch (error) {
+      console.error("Error fetching chapters:", error);
+      res.status(500).json({ error: "Failed to fetch chapters" });
+    }
+  });
+
+  // Get single chapter from a book
+  app.get("/api/books/:bookId/chapters/:chapterId", async (req, res) => {
+    try {
+      const chapterId = parseInt(req.params.chapterId);
+      const chapter = await db.select().from(chapters).where(eq(chapters.id, chapterId));
+      if (chapter.length === 0) {
+        return res.status(404).json({ error: "Chapter not found" });
+      }
+      res.json(chapter[0]);
+    } catch (error) {
+      console.error("Error fetching chapter:", error);
+      res.status(500).json({ error: "Failed to fetch chapter" });
+    }
+  });
+
+  // Create chapter in a book
+  app.post("/api/books/:bookId/chapters", async (req, res) => {
+    try {
+      const bookId = parseInt(req.params.bookId);
+      const chapterData = { ...req.body, bookId };
+      const parsed = insertChapterSchema.safeParse(chapterData);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid chapter data", details: parsed.error });
+      }
+      const newChapter = await db.insert(chapters).values(parsed.data).returning();
+      res.status(201).json(newChapter[0]);
+    } catch (error) {
+      console.error("Error creating chapter:", error);
+      res.status(500).json({ error: "Failed to create chapter" });
+    }
+  });
+
+  // Update chapter
+  app.patch("/api/books/:bookId/chapters/:chapterId", async (req, res) => {
+    try {
+      const chapterId = parseInt(req.params.chapterId);
+      const updatedChapter = await db.update(chapters)
+        .set({ ...req.body, updatedAt: new Date() })
+        .where(eq(chapters.id, chapterId))
+        .returning();
+      if (updatedChapter.length === 0) {
+        return res.status(404).json({ error: "Chapter not found" });
+      }
+      res.json(updatedChapter[0]);
+    } catch (error) {
+      console.error("Error updating chapter:", error);
+      res.status(500).json({ error: "Failed to update chapter" });
+    }
+  });
+
+  // Delete chapter
+  app.delete("/api/books/:bookId/chapters/:chapterId", async (req, res) => {
+    try {
+      const chapterId = parseInt(req.params.chapterId);
+      const deleted = await db.delete(chapters).where(eq(chapters.id, chapterId)).returning();
+      if (deleted.length === 0) {
+        return res.status(404).json({ error: "Chapter not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting chapter:", error);
+      res.status(500).json({ error: "Failed to delete chapter" });
+    }
+  });
+
+  // ===== MIGRATION: Import existing book into database =====
+  app.post("/api/migrate/seed-default-book", async (req, res) => {
+    try {
+      // Check if default book already exists
+      const existingDefault = await db.select().from(books).where(eq(books.isDefault, true));
+      if (existingDefault.length > 0) {
+        return res.json({ message: "Default book already exists", book: existingDefault[0] });
+      }
+
+      // Create the default book
+      const [newBook] = await db.insert(books).values({
+        title: "The Leader's Guide to AI Teams",
+        subtitle: "Building High-Performance AI Agent Workforces",
+        authors: "Rayo Marji (CTO, Arootah) & Rich Bello (Founder, Arootah)",
+        description: "The definitive playbook for executives who want to 10x their output with AI agents. Learn to build and manage AI agent workforces.",
+        coverColor: "#6366f1",
+        status: "editing",
+        isDefault: true
+      }).returning();
+
+      // Import chapters from markdown files
+      const chaptersDir = path.join(process.cwd(), "content", "chapters");
+      const files = fs.readdirSync(chaptersDir).filter(f => f.endsWith(".md"));
+      
+      const chapterOrder = ['overview', 'chapter-1', 'chapter-2', 'chapter-3', 'chapter-4', 'chapter-5', 
+                           'chapter-6', 'chapter-7', 'chapter-8', 'chapter-9', 'chapter-10'];
+      
+      const sortedFiles = files.sort((a, b) => {
+        const aSlug = a.replace('.md', '');
+        const bSlug = b.replace('.md', '');
+        return chapterOrder.indexOf(aSlug) - chapterOrder.indexOf(bSlug);
+      });
+
+      let sortOrder = 0;
+      for (const file of sortedFiles) {
+        const slug = file.replace('.md', '');
+        const filePath = path.join(chaptersDir, file);
+        const content = fs.readFileSync(filePath, 'utf-8');
+        const wordCount = countWords(content);
+        
+        // Extract title from first heading or use slug
+        const titleMatch = content.match(/^#\s+(.+)$/m);
+        const title = titleMatch ? titleMatch[1] : slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        
+        await db.insert(chapters).values({
+          bookId: newBook.id,
+          slug,
+          title,
+          content,
+          sortOrder,
+          wordCount,
+          status: 'draft'
+        });
+        sortOrder++;
+      }
+
+      res.json({ 
+        message: "Default book created and chapters imported", 
+        book: newBook,
+        chaptersImported: sortedFiles.length 
+      });
+    } catch (error) {
+      console.error("Error seeding default book:", error);
+      res.status(500).json({ error: "Failed to seed default book" });
+    }
+  });
+
+  // ===== LEGACY FILE-BASED CHAPTER API (for backward compatibility) =====
+  
   // Serve chapter content as markdown with metadata
   app.get("/api/chapters/:id", async (req, res) => {
     const chapterId = req.params.id;

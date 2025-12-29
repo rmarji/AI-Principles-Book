@@ -1,9 +1,9 @@
 # Principle 9: Architect the Future Org
 
 > "The task of leadership is not to put greatness into people, but to elicit it, for the greatness is there already."
-> — John Buchan
+> - John Buchan
 
-Scaling AI from personal productivity to organizational capability requires architectural thinking, not just more agents. The principles that make you effective with AI—context, matching, transitions, collaboration—must now be embedded in organizational structures, processes, and culture.
+Scaling AI from personal productivity to organizational capability requires architectural thinking, not just more agents. The principles that make you effective with AI-context, matching, transitions, collaboration-must now be embedded in organizational structures, processes, and culture.
 
 In Chapter 8, we explored how to collaborate without abdicating, ensuring that as individuals we partner with AI effectively. Now we scale that vision across entire organizations, transforming not just how individuals work, but how teams, departments, and enterprises operate together.
 
@@ -427,7 +427,7 @@ Static organizational designs will give way to continuously evolving structures.
 
 **Emergent Capabilities**
 
-As organizations deploy more AI agents across more functions, emergent capabilities will appear—capabilities that arise from the interaction of many agents rather than from any single one. Cross-functional insights, organization-wide pattern recognition, and coordinated responses to complex situations will emerge from agent networks in ways that parallel how organizational culture emerges from many individual behaviors.
+As organizations deploy more AI agents across more functions, emergent capabilities will appear-capabilities that arise from the interaction of many agents rather than from any single one. Cross-functional insights, organization-wide pattern recognition, and coordinated responses to complex situations will emerge from agent networks in ways that parallel how organizational culture emerges from many individual behaviors.
 
 **Preparing for the AI-Native Future**
 
@@ -442,7 +442,7 @@ The leaders who architect their organizations thoughtfully today create the foun
 
 ## Conclusion
 
-Architect the Future Org captures the essential challenge of scaling AI from personal productivity to organizational capability. The principles that make individuals effective with AI—context, matching, transitions, collaboration—must be embedded in organizational structures, processes, and culture to scale.
+Architect the Future Org captures the essential challenge of scaling AI from personal productivity to organizational capability. The principles that make individuals effective with AI-context, matching, transitions, collaboration-must be embedded in organizational structures, processes, and culture to scale.
 
 Successful organizational AI adoption requires leaders who can articulate compelling vision while acknowledging uncertainty, who invest generously in development while maintaining business discipline, who establish protective governance while enabling innovation, and who drive change while respecting human concerns. These leaders understand that AI transformation is fundamentally about people, culture, and organizational capability rather than merely technology deployment.
 
@@ -452,7 +452,7 @@ AI-positive cultures emerge from consistent leadership behavior, structural supp
 
 The organizations that thrive in the AI agent era will develop distinctive capabilities in AI collaboration, create cultures that embrace continuous learning, and build governance frameworks that balance innovation with responsibility. They will treat AI not as a cost-cutting tool but as a capability multiplier that enables their people to contribute more creatively, decide more wisely, and serve stakeholders more effectively.
 
-In the final chapter, we turn to the responsibility that accompanies this power. With great AI capability comes great responsibility—for privacy, for fairness, for transparency, for accountability. The leaders who wield AI power well are those who govern it ethically. The price of power is governing it responsibly.
+In the final chapter, we turn to the responsibility that accompanies this power. With great AI capability comes great responsibility-for privacy, for fairness, for transparency, for accountability. The leaders who wield AI power well are those who govern it ethically. The price of power is governing it responsibly.
 
 ## Summary
 

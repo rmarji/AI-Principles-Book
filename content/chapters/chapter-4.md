@@ -1,17 +1,17 @@
 # Principle 4: Audit. Automate. Amplify.
 
 > "The first step in exceeding your customer's expectations is to know those expectations."
-> — Roy H. Williams, Author and Marketing Consultant
+> - Roy H. Williams, Author and Marketing Consultant
 
 In Chapters 1 through 3, we established what AI agents are, why context is the key to unlocking their value, and how to match the right type of agent to the right type of task. Now we turn from understanding to action with a systematic 3-step process for strategic AI adoption.
 
 We call this process **Audit. Automate. Amplify.**
 
-**Audit** means understanding where your time actually goes—not where you think it goes—so you can identify the highest-impact opportunities for delegation.
+**Audit** means understanding where your time actually goes-not where you think it goes-so you can identify the highest-impact opportunities for delegation.
 
 **Automate** means strategically deploying AI agents to handle the work you've identified, matching each task to the right agent type with appropriate context, boundaries, and oversight.
 
-**Amplify** means reinvesting your reclaimed time into the high-judgment, high-value work that only you can do—multiplying your impact rather than simply reducing your workload.
+**Amplify** means reinvesting your reclaimed time into the high-judgment, high-value work that only you can do-multiplying your impact rather than simply reducing your workload.
 
 This is not a one-time exercise but a continuous cycle. As you amplify your impact, new opportunities emerge. As AI capabilities advance, new automation becomes possible. The leaders who thrive will be those who treat this cycle as an ongoing practice, not a project with an end date.
 
@@ -19,7 +19,7 @@ This is not a one-time exercise but a continuous cycle. As you amplify your impa
 
 **Anchor Statistic:** According to a comprehensive study by Asana's Work Index, knowledge workers spend 60% of their time on "work about work" rather than skilled, strategic activities. This includes searching for information, switching between applications, managing shifting priorities, and chasing status updates. Organizations that have implemented AI-driven automation for these coordination activities report reclaiming an average of 8.5 hours per employee per week for higher-value work (Asana, "Anatomy of Work Index," 2024).
 
-## STEP 1: AUDIT — Map Your Work
+## STEP 1: AUDIT - Map Your Work
 
 Before we can delegate effectively, we need to understand what we are currently doing. This statement seems obvious, yet most leaders operate with only a vague sense of how their time is actually spent. We carry assumptions about our work patterns that are often dramatically wrong. The first step in building an AI agent workforce is therefore a rigorous audit of our current workflow.
 
@@ -53,7 +53,7 @@ At the end of the week, we categorize our activities into major buckets. Based o
 
 Once we have categorized our week, we calculate the percentage of time in each bucket. The results are frequently sobering. Many leaders discover that decision-making and strategic thinking, the activities that presumably justify their positions, consume less than 20% of their time. Meanwhile, communication and coordination, activities that largely exist as overhead, consume half or more of available hours.
 
-## STEP 2: AUTOMATE — Delegate to Agents
+## STEP 2: AUTOMATE - Delegate to Agents
 
 With our activities categorized and quantified, we apply a systematic delegation filter. Not every activity is suitable for AI agent delegation, and not all suitable activities offer equal value. Our goal is to identify the highest-impact opportunities that will deliver the greatest return on our implementation investment.
 
@@ -543,7 +543,7 @@ Results after six months showed significant improvements: client retention incre
 
 The department-level implementation demonstrated how agent strategies can scale beyond individual leaders to transform team performance.
 
-## STEP 3: AMPLIFY — Multiply Your Impact
+## STEP 3: AMPLIFY - Multiply Your Impact
 
 Automation without amplification is a wasted opportunity. Reclaiming 10 hours per week means nothing if those hours simply disappear into email, meetings, or reactive firefighting. The Amplify step is where the real transformation happens: deliberately reinvesting your reclaimed time into the high-value work that only you can do.
 
@@ -647,11 +647,11 @@ The Audit-Automate-Amplify framework represents a systematic approach to AI adop
 
 **Amplify** is where the real transformation happens. Reclaimed time deliberately reinvested in strategic thinking, relationship building, high-stakes decisions, and talent development creates compounding returns that far exceed simple efficiency gains. This is not about working less but about working on what matters more.
 
-The case studies we examined—Sarah's personal transformation and Marcus's department-wide implementation—demonstrate that this framework scales from individual leaders to organizational capability. The common mistakes we identified serve as guardrails: audit before automating, specify thoroughly, trust progressively, iterate continuously, and always close the loop with amplification.
+The case studies we examined-Sarah's personal transformation and Marcus's department-wide implementation-demonstrate that this framework scales from individual leaders to organizational capability. The common mistakes we identified serve as guardrails: audit before automating, specify thoroughly, trust progressively, iterate continuously, and always close the loop with amplification.
 
 The 3-step cycle is not a one-time project but an ongoing practice. As AI capabilities advance and your impact grows, new audit-automate-amplify opportunities emerge. The leaders who thrive will be those who master this cycle and evolve with it.
 
-In the next chapter, we explore how to design the transitions between human and AI work—the handoffs where context gets preserved or lost, where workflows succeed or fail. Mastering these transitions is essential for making your Audit-Automate-Amplify investments pay off consistently.
+In the next chapter, we explore how to design the transitions between human and AI work-the handoffs where context gets preserved or lost, where workflows succeed or fail. Mastering these transitions is essential for making your Audit-Automate-Amplify investments pay off consistently.
 
 ---
 

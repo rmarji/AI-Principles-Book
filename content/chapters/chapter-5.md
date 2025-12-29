@@ -1,15 +1,15 @@
 # Principle 5: Master the Transition
 
 > "The key to success is not information. It's people. And the key to activating people is to have a system that works."
-> — W. Edwards Deming, pioneer of quality management
+> - W. Edwards Deming, pioneer of quality management
 
-The magic happens at the handoff. The transition between human work and AI work—and back again—is where value is created or destroyed, where context is preserved or lost, where workflows succeed or fail.
+The magic happens at the handoff. The transition between human work and AI work-and back again-is where value is created or destroyed, where context is preserved or lost, where workflows succeed or fail.
 
 In Chapter 4, we learned to Audit, Automate, and Amplify. But automation without thoughtful transition design creates chaos. An AI agent that produces brilliant analysis means nothing if humans cannot understand, validate, or act on it. A human decision means nothing if AI agents cannot receive and execute it with fidelity. The transitions are everything.
 
-This chapter focuses on mastering these critical handoff points. We will explore how to design workflows where work flows seamlessly between human and AI participants. We will examine the architecture of effective transitions—the triggers that start work, the processes that transform it, the outputs that emerge, and the governance that ensures quality. Most importantly, we will address where context gets lost and how to preserve it.
+This chapter focuses on mastering these critical handoff points. We will explore how to design workflows where work flows seamlessly between human and AI participants. We will examine the architecture of effective transitions-the triggers that start work, the processes that transform it, the outputs that emerge, and the governance that ensures quality. Most importantly, we will address where context gets lost and how to preserve it.
 
-The difference between organizations that struggle with AI adoption and those that achieve transformative results rarely comes down to technology selection. The distinguishing factor is transition design—how thoughtfully they architect the moments where human and AI work connect.
+The difference between organizations that struggle with AI adoption and those that achieve transformative results rarely comes down to technology selection. The distinguishing factor is transition design-how thoughtfully they architect the moments where human and AI work connect.
 
 *How can leaders design AI workflows that reliably deliver value while maintaining the human judgment, quality standards, and continuous improvement essential for organizational excellence?*
 
@@ -451,7 +451,7 @@ As workflows scale, governance must scale as well.
 
 ## Looking Ahead: Seamless Transitions
 
-The handoff points we design today—explicit, documented, carefully governed—will evolve toward something far more fluid. Several trends will reshape how humans and AI work together:
+The handoff points we design today-explicit, documented, carefully governed-will evolve toward something far more fluid. Several trends will reshape how humans and AI work together:
 
 **Invisible Handoffs**
 
@@ -482,7 +482,7 @@ To prepare for seamless transitions:
 - Maintain governance frameworks flexible enough to accommodate new patterns
 - Stay current with emerging tools for human-AI collaboration
 
-The leaders who master today's transitions build the foundation for tomorrow's seamless collaboration. The principles in this chapter—clarity of purpose, thoughtful decomposition, robust feedback, graceful failure, meaningful checkpoints—remain valid even as the specific mechanisms evolve.
+The leaders who master today's transitions build the foundation for tomorrow's seamless collaboration. The principles in this chapter-clarity of purpose, thoughtful decomposition, robust feedback, graceful failure, meaningful checkpoints-remain valid even as the specific mechanisms evolve.
 
 ## Conclusion
 
@@ -508,7 +508,7 @@ We encourage you to begin applying these principles immediately. Select one impo
 
 The transformation ahead is significant but achievable. Organizations that approach it systematically, building capability through practice and learning, will find themselves well-positioned for whatever the next chapter of AI development brings.
 
-In the next chapter, we turn to one of the most powerful applications of well-designed workflows: making aligned decisions at scale. With proper transitions in place, AI can help leaders make better, faster, less biased decisions across their entire scope of responsibility—multiplying not just productivity but judgment quality itself.
+In the next chapter, we turn to one of the most powerful applications of well-designed workflows: making aligned decisions at scale. With proper transitions in place, AI can help leaders make better, faster, less biased decisions across their entire scope of responsibility-multiplying not just productivity but judgment quality itself.
 
 ## Summary
 

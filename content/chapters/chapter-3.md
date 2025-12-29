@@ -1,11 +1,11 @@
 # Principle 3: The Right Mind for the Task
 
 > "The key to artificial intelligence has always been the representation."
-> —Jeff Hawkins, Founder of Palm Computing and Numenta
+> -Jeff Hawkins, Founder of Palm Computing and Numenta
 
-In Chapter 1, we explored what makes AI agents fundamentally different from traditional tools—their ability to pursue goals autonomously, reason through complex problems, and take meaningful action on your behalf. In Chapter 2, we established that context is king: raw AI capability means nothing without the business, technical, and human context that transforms intelligence into value. Now we arrive at a critical question that every leader must answer: what types of AI agents are available, and which ones will deliver the greatest value for your specific business context?
+In Chapter 1, we explored what makes AI agents fundamentally different from traditional tools-their ability to pursue goals autonomously, reason through complex problems, and take meaningful action on your behalf. In Chapter 2, we established that context is king: raw AI capability means nothing without the business, technical, and human context that transforms intelligence into value. Now we arrive at a critical question that every leader must answer: what types of AI agents are available, and which ones will deliver the greatest value for your specific business context?
 
-The answer lies in matching the right agent to the right task—what we call finding "the right mind for the task." Just as you would not assign your best strategic thinker to data entry, or your most detail-oriented analyst to creative brainstorming, different AI agents excel at fundamentally different types of work.
+The answer lies in matching the right agent to the right task-what we call finding "the right mind for the task." Just as you would not assign your best strategic thinker to data entry, or your most detail-oriented analyst to creative brainstorming, different AI agents excel at fundamentally different types of work.
 
 Understanding the landscape of AI agent types is not merely an academic exercise. The choices you make about which agents to deploy will directly impact your productivity, your team's effectiveness, and your organization's competitive positioning. Just as you would not hire employees without understanding the roles you need filled, you should not deploy AI agents without a clear understanding of what each type can accomplish and where each type excels. This chapter serves as your comprehensive guide to the diverse ecosystem of AI agents available to business leaders today.
 
@@ -311,7 +311,7 @@ With this comprehensive overview of agent types, the question becomes: where sho
 
 ### Context Needs by Agent Type
 
-Before diving into selection principles, it is worth noting that different agent types have distinct context requirements—a direct application of Chapter 2's lessons. Understanding these requirements helps you invest context appropriately:
+Before diving into selection principles, it is worth noting that different agent types have distinct context requirements-a direct application of Chapter 2's lessons. Understanding these requirements helps you invest context appropriately:
 
 **Research Agents** require clarity about what questions matter and what sources are credible. Provide context about your industry, competitive landscape, and decision-making timeline.
 
@@ -363,11 +363,11 @@ We may see a bifurcation between powerful generalist agents that can handle a wi
 
 **Agent Orchestration and Collaboration**
 
-Individual agents will give way to agent teams that collaborate on complex tasks. A research agent might hand off to an analysis agent, which feeds a communication agent, which coordinates with a scheduling agent—all working together on a single workflow. Understanding how to design and manage these multi-agent systems will become a core leadership competency.
+Individual agents will give way to agent teams that collaborate on complex tasks. A research agent might hand off to an analysis agent, which feeds a communication agent, which coordinates with a scheduling agent-all working together on a single workflow. Understanding how to design and manage these multi-agent systems will become a core leadership competency.
 
 **Continuous Learning and Personalization**
 
-Future agents will learn more deeply from your feedback and usage patterns, becoming increasingly personalized over time. Your research agent will learn your information preferences. Your communication agent will master your voice so thoroughly that distinguishing its drafts from your writing becomes impossible. This personalization will make agents increasingly valuable—but also increasingly difficult to replace, creating new considerations around agent lock-in and portability.
+Future agents will learn more deeply from your feedback and usage patterns, becoming increasingly personalized over time. Your research agent will learn your information preferences. Your communication agent will master your voice so thoroughly that distinguishing its drafts from your writing becomes impossible. This personalization will make agents increasingly valuable-but also increasingly difficult to replace, creating new considerations around agent lock-in and portability.
 
 **Preparing for This Future**
 
@@ -376,7 +376,7 @@ To prepare for these developments:
 - Develop internal capabilities for evaluating and deploying new agent types
 - Build governance frameworks flexible enough to accommodate new capabilities
 - Cultivate a culture of experimentation that enables rapid adoption when new agents prove valuable
-- Invest in the context infrastructure—data, documentation, processes—that enables any agent to be effective
+- Invest in the context infrastructure-data, documentation, processes-that enables any agent to be effective
 
 The agents available today are powerful, but they are merely the first generation of a technology that will continue to evolve rapidly. The leaders who thrive will be those who master today's agents while remaining prepared for tomorrow's capabilities.
 

@@ -10,7 +10,7 @@
 
 A practical playbook for leaders and professionals to strategically integrate AI and autonomous AI agents into their workflows, build AI agent teams, and design AI-powered organizational structures.
 
-This book shows how to move beyond simple AI tools to orchestrating networks of AI agents that work together—creating your personal "AI workforce" and revolutionizing team productivity.
+This book shows how to move beyond simple AI tools to orchestrating networks of AI agents that work together-creating your personal "AI workforce" and revolutionizing team productivity.
 
 ### About the Author
 
@@ -53,7 +53,7 @@ We'll show you how to:
 
 ### The Promise
 
-The future belongs to the "Centaurs"—half human, half AI. Leaders who learn to effectively delegate to AI agents will multiply their impact and free themselves for the high-judgment work that only humans can do.
+The future belongs to the "Centaurs"-half human, half AI. Leaders who learn to effectively delegate to AI agents will multiply their impact and free themselves for the high-judgment work that only humans can do.
 
 This book will help you build your other half, starting today.
 
