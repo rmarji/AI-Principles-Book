@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
-import { Sparkles, ArrowRight, MessageSquare, Share2, Bookmark, Brain, Loader2, FileText, ListChecks, AlertTriangle, ChevronDown, PanelRightClose, PanelRight, Download, Settings } from "lucide-react";
+import { Sparkles, ArrowRight, MessageSquare, Share2, Bookmark, Brain, Loader2, FileText, ListChecks, AlertTriangle, ChevronDown, PanelRightClose, PanelRight, Download, Settings, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { marked } from "marked";
 import { QualityChecklist } from "@/components/QualityChecklist";
@@ -18,6 +18,7 @@ import { ScorecardBadge } from "@/components/ScorecardBadge";
 import { MermaidDiagram } from "@/components/MermaidDiagram";
 import { getDiagramsForChapter } from "@/lib/chapterDiagrams";
 import { SettingsPanel } from "@/components/SettingsPanel";
+import type { Book, Chapter as ChapterType } from "@shared/schema";
 
 function generateSlug(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -137,10 +138,13 @@ function ChapterContentWithDiagrams({ htmlContent, chapterId }: ChapterContentPr
 }
 
 export default function Chapter() {
-  const [match, params] = useRoute("/chapter/:id");
-  const [location] = useLocation();
-  const chapterId = params?.id;
-  const chapter = bookContent.find(c => c.id === chapterId);
+  const [, legacyParams] = useRoute("/chapter/:id");
+  const [, bookParams] = useRoute("/book/:bookId/chapter/:id");
+  
+  const bookId = bookParams?.bookId ? parseInt(bookParams.bookId) : null;
+  const chapterId = bookParams?.id || legacyParams?.id;
+  const chapter = bookId ? null : bookContent.find(c => c.id === chapterId);
+  
   const scrollRef = useRef<HTMLDivElement>(null);
   const [fullContent, setFullContent] = useState<string | null>(null);
   const [activeRightPanel, setActiveRightPanel] = useState<RightPanel>('quality');
@@ -149,6 +153,9 @@ export default function Chapter() {
   const [loading, setLoading] = useState(true);
   const [wordCount, setWordCount] = useState<number | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
+  
+  const [dbChapter, setDbChapter] = useState<ChapterType | null>(null);
+  const [book, setBook] = useState<Book | null>(null);
 
   const handleDownloadChapter = async () => {
     if (!chapterId) return;
@@ -171,8 +178,29 @@ export default function Chapter() {
     setFullContent(null);
     setRawContent(null);
     setWordCount(null);
+    setDbChapter(null);
+    setBook(null);
     
-    if (chapterId) {
+    if (bookId && chapterId) {
+      Promise.all([
+        fetch(`/api/books/${bookId}`).then(r => r.json()),
+        fetch(`/api/books/${bookId}/chapters/${chapterId}`).then(r => r.json())
+      ]).then(([bookData, chapterData]) => {
+        setBook(bookData);
+        setDbChapter(chapterData);
+        if (chapterData.content) {
+          configureMarked();
+          const htmlContent = marked.parse(chapterData.content, { async: false }) as string;
+          setFullContent(htmlContent);
+          setRawContent(chapterData.content);
+          setWordCount(chapterData.wordCount || null);
+        }
+        setLoading(false);
+      }).catch((err) => {
+        console.error('Failed to load chapter:', err);
+        setLoading(false);
+      });
+    } else if (chapterId) {
       fetch(`/api/chapters/${chapterId}`)
         .then(res => {
           if (!res.ok) throw new Error('Chapter not found');
@@ -202,7 +230,89 @@ export default function Chapter() {
           setLoading(false);
         });
     }
-  }, [chapterId]);
+  }, [chapterId, bookId]);
+
+  if (bookId) {
+    if (loading) {
+      return (
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <span className="ml-3 text-muted-foreground">Loading chapter...</span>
+        </div>
+      );
+    }
+    
+    if (!dbChapter) {
+      return (
+        <div className="min-h-screen bg-background">
+          <header className="h-16 border-b border-border bg-background/80 flex items-center px-8">
+            <Link href={`/book/${bookId}`}>
+              <Button variant="ghost" size="sm">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Contents
+              </Button>
+            </Link>
+          </header>
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <AlertTriangle className="w-10 h-10 text-muted-foreground mb-4" />
+            <p className="text-muted-foreground">Chapter not found.</p>
+            <p className="text-sm text-muted-foreground/70 mt-2">This chapter may have been deleted or moved.</p>
+          </div>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="min-h-screen bg-background">
+        <header className="h-16 border-b border-border bg-background/80 backdrop-blur z-10 flex items-center justify-between px-8">
+          <div className="flex items-center gap-4">
+            <Link href={`/book/${bookId}`}>
+              <Button variant="ghost" size="sm">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Contents
+              </Button>
+            </Link>
+            <span className="text-sm font-medium text-muted-foreground">
+              {dbChapter.title}
+            </span>
+            {wordCount && (
+              <Badge variant="outline" className="text-[10px] h-5 gap-1">
+                <FileText className="w-3 h-3" />
+                {formatWordCount(wordCount)} words
+              </Badge>
+            )}
+          </div>
+        </header>
+        
+        <div className="max-w-3xl mx-auto px-8 py-12" ref={scrollRef}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <h1 className="text-3xl md:text-4xl font-heading font-bold text-foreground mb-4">
+              {dbChapter.title}
+            </h1>
+            {dbChapter.subtitle && (
+              <p className="text-xl text-muted-foreground mb-8">{dbChapter.subtitle}</p>
+            )}
+            
+            {fullContent ? (
+              <article className="chapter-content max-w-none" data-testid="chapter-content">
+                <div dangerouslySetInnerHTML={{ __html: fullContent }} />
+              </article>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <AlertTriangle className="w-10 h-10 text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">No content yet.</p>
+                <p className="text-sm text-muted-foreground/70 mt-2">Add content to this chapter to see it here.</p>
+              </div>
+            )}
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
 
   if (!chapter) return <div className="flex items-center justify-center h-screen">Chapter not found</div>;
 
