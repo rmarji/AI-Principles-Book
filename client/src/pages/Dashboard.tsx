@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
-import { Plus, Book, Edit2, Trash2, MoreVertical, FileText, Loader2, Sparkles, Home, ArrowLeft, ChevronRight, Wand2, Save, X, GripVertical, ListTree, Image } from "lucide-react";
+import { Plus, Book, Edit2, Trash2, MoreVertical, FileText, Loader2, Sparkles, Home, ArrowLeft, ChevronRight, ChevronDown, Wand2, Save, X, GripVertical, ListTree, Image, Check, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { Book as BookType, Chapter, OutlineSection } from "@shared/schema";
+import type { Book as BookType, Chapter, OutlineChapter, OutlineSection } from "@shared/schema";
 
 const COVER_COLORS = [
   "#6366f1", "#8b5cf6", "#ec4899", "#ef4444", "#f97316", 
@@ -46,17 +46,19 @@ export default function Dashboard() {
   const [generating, setGenerating] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("write");
   
-  // Outline management state
-  const [outlineSections, setOutlineSections] = useState<OutlineSection[]>([]);
+  // Outline management state (hierarchical: chapters with sections)
+  type OutlineChapterWithSections = OutlineChapter & { sections: OutlineSection[] };
+  const [outlineChapters, setOutlineChapters] = useState<OutlineChapterWithSections[]>([]);
   const [loadingOutline, setLoadingOutline] = useState(false);
   const [generatingOutline, setGeneratingOutline] = useState(false);
   const [outlineGuidance, setOutlineGuidance] = useState("");
   const [chapterCount, setChapterCount] = useState("10");
   const [showOutlineView, setShowOutlineView] = useState(false);
-  const [selectedOutlineSection, setSelectedOutlineSection] = useState<number | null>(null);
+  const [selectedOutlineChapter, setSelectedOutlineChapter] = useState<number | null>(null);
+  const [expandedChapters, setExpandedChapters] = useState<Set<number>>(new Set());
   
-  // Cover prompt state
-  const [generatingCoverPrompt, setGeneratingCoverPrompt] = useState(false);
+  // Cover prompt and image state
+  const [generatingCover, setGeneratingCover] = useState(false);
 
   useEffect(() => {
     fetchBooks();
@@ -101,7 +103,7 @@ export default function Dashboard() {
     try {
       const response = await fetch(`/api/books/${bookId}/outline`);
       const data = await response.json();
-      setOutlineSections(data);
+      setOutlineChapters(data);
     } catch (error) {
       console.error("Failed to fetch outline:", error);
     } finally {
@@ -123,8 +125,8 @@ export default function Dashboard() {
       });
       if (response.ok) {
         const data = await response.json();
-        setOutlineSections(data.sections);
-        toast({ title: "Outline Generated", description: `Created ${data.sections.length} chapter outlines` });
+        setOutlineChapters(data.chapters);
+        toast({ title: "Outline Generated", description: `Created ${data.chapters.length} chapters with sections` });
       } else {
         toast({ title: "Error", description: "Failed to generate outline", variant: "destructive" });
       }
@@ -136,27 +138,64 @@ export default function Dashboard() {
     }
   };
 
-  const handleGenerateCoverPrompt = async () => {
+  const handleApproveOutlineChapter = async (chapterId: number) => {
     if (!selectedBook) return;
-    setGeneratingCoverPrompt(true);
     try {
-      const response = await fetch(`/api/books/${selectedBook.id}/cover-prompt/generate`, {
+      const response = await fetch(`/api/books/${selectedBook.id}/outline/chapters/${chapterId}/approve`, {
+        method: "PATCH"
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setOutlineChapters(outlineChapters.map(c => 
+          c.id === chapterId ? { ...c, approvalStatus: data.approvalStatus, approvedAt: data.approvedAt } : c
+        ));
+        toast({ title: "Chapter Approved", description: "This outline chapter is ready for content generation" });
+      }
+    } catch (error) {
+      console.error("Error approving chapter:", error);
+      toast({ title: "Error", description: "Failed to approve chapter", variant: "destructive" });
+    }
+  };
+
+  const handleGenerateCover = async () => {
+    if (!selectedBook) return;
+    setGeneratingCover(true);
+    try {
+      const response = await fetch(`/api/books/${selectedBook.id}/cover/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" }
       });
       if (response.ok) {
         const data = await response.json();
-        setSelectedBook({ ...selectedBook, coverPrompt: data.coverPrompt });
-        setBooks(books.map(b => b.id === selectedBook.id ? { ...b, coverPrompt: data.coverPrompt } : b));
-        toast({ title: "Cover Prompt Generated", description: "AI has created a cover image prompt" });
+        setSelectedBook({ ...selectedBook, coverPrompt: data.coverPrompt, coverImageUrl: data.coverImageUrl });
+        setBooks(books.map(b => b.id === selectedBook.id ? { ...b, coverPrompt: data.coverPrompt, coverImageUrl: data.coverImageUrl } : b));
+        toast({ title: "Cover Generated!", description: "AI has created your book cover image" });
       } else {
-        toast({ title: "Error", description: "Failed to generate cover prompt", variant: "destructive" });
+        toast({ title: "Error", description: "Failed to generate cover", variant: "destructive" });
       }
     } catch (error) {
-      console.error("Error generating cover prompt:", error);
-      toast({ title: "Error", description: "Failed to generate cover prompt", variant: "destructive" });
+      console.error("Error generating cover:", error);
+      toast({ title: "Error", description: "Failed to generate cover", variant: "destructive" });
     } finally {
-      setGeneratingCoverPrompt(false);
+      setGeneratingCover(false);
+    }
+  };
+
+  const toggleChapterExpanded = (chapterId: number) => {
+    const newExpanded = new Set(expandedChapters);
+    if (newExpanded.has(chapterId)) {
+      newExpanded.delete(chapterId);
+    } else {
+      newExpanded.add(chapterId);
+    }
+    setExpandedChapters(newExpanded);
+  };
+
+  const getApprovalStatusColor = (status: string) => {
+    switch (status) {
+      case "approved": return "bg-green-100 text-green-800 border-green-300";
+      case "in_review": return "bg-yellow-100 text-yellow-800 border-yellow-300";
+      default: return "bg-gray-100 text-gray-800 border-gray-300";
     }
   };
 
@@ -257,8 +296,8 @@ export default function Dashboard() {
         content: chapter.content || "",
         status: chapter.status || "draft"
       });
-      setSelectedOutlineSection(null);
-    } else if (!selectedOutlineSection) {
+      setSelectedOutlineChapter(null);
+    } else if (!selectedOutlineChapter) {
       setEditingChapter(null);
       setChapterForm(EMPTY_CHAPTER);
     }
@@ -271,7 +310,7 @@ export default function Dashboard() {
     setChapterDialogOpen(false);
     setEditingChapter(null);
     setChapterForm(EMPTY_CHAPTER);
-    setSelectedOutlineSection(null);
+    setSelectedOutlineChapter(null);
   };
 
   const handleSaveChapter = async () => {
@@ -357,7 +396,7 @@ export default function Dashboard() {
           prompt: aiPrompt,
           title: chapterForm.title || "New Chapter",
           context: selectedBook.description,
-          outlineSectionId: selectedOutlineSection
+          outlineChapterId: selectedOutlineChapter
         })
       });
       
@@ -417,7 +456,7 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <h1 className="text-xl font-semibold">{selectedBook.title}</h1>
-                  <p className="text-sm text-muted-foreground">{chapters.length} chapters • {outlineSections.length} outline sections</p>
+                  <p className="text-sm text-muted-foreground">{chapters.length} chapters • {outlineChapters.length} outline chapters</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -459,12 +498,12 @@ export default function Dashboard() {
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={handleGenerateCoverPrompt}
-                disabled={generatingCoverPrompt}
-                data-testid="button-generate-cover"
+                onClick={handleGenerateCover}
+                disabled={generatingCover}
+                data-testid="button-generate-cover-quick"
               >
-                {generatingCoverPrompt ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Image className="w-4 h-4 mr-2" />}
-                Cover Prompt
+                {generatingCover ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Image className="w-4 h-4 mr-2" />}
+                Generate Cover
               </Button>
             </div>
           </div>
@@ -525,12 +564,12 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
 
-              {/* Outline Sections List */}
+              {/* Hierarchical Outline Chapters List */}
               {loadingOutline ? (
                 <div className="flex items-center justify-center py-12">
                   <Loader2 className="w-8 h-8 animate-spin text-primary" />
                 </div>
-              ) : outlineSections.length === 0 ? (
+              ) : outlineChapters.length === 0 ? (
                 <div className="text-center py-12 bg-muted/30 rounded-lg">
                   <ListTree className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
                   <h3 className="font-medium mb-2">No outline yet</h3>
@@ -538,63 +577,160 @@ export default function Dashboard() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <h3 className="font-semibold text-lg">Chapter Outline ({outlineSections.length} chapters)</h3>
-                  {outlineSections.map((section, index) => (
-                    <Card key={section.id} className="group" data-testid={`card-outline-${section.id}`}>
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-lg">Chapter Outline ({outlineChapters.length} chapters)</h3>
+                    <Badge variant="outline" className="text-xs">
+                      {outlineChapters.filter(c => c.approvalStatus === "approved").length} approved
+                    </Badge>
+                  </div>
+                  {outlineChapters.map((chapter, index) => (
+                    <Card key={chapter.id} className="group" data-testid={`card-outline-chapter-${chapter.id}`}>
                       <div className="p-4">
                         <div className="flex items-start gap-4">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="flex-shrink-0 w-8 h-8"
+                            onClick={() => toggleChapterExpanded(chapter.id)}
+                            data-testid={`button-expand-chapter-${chapter.id}`}
+                          >
+                            {expandedChapters.has(chapter.id) ? (
+                              <ChevronDown className="w-4 h-4" />
+                            ) : (
+                              <ChevronRight className="w-4 h-4" />
+                            )}
+                          </Button>
                           <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
                             {index + 1}
                           </div>
-                          <div className="flex-1">
-                            <h4 className="font-medium">{section.title}</h4>
-                            {section.summary && (
-                              <p className="text-sm text-muted-foreground mt-1">{section.summary}</p>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-medium">{chapter.title}</h4>
+                              <Badge className={getApprovalStatusColor(chapter.approvalStatus)} variant="outline">
+                                {chapter.approvalStatus === "approved" && <Check className="w-3 h-3 mr-1" />}
+                                {chapter.approvalStatus === "in_review" && <Clock className="w-3 h-3 mr-1" />}
+                                {chapter.approvalStatus}
+                              </Badge>
+                            </div>
+                            {chapter.summary && (
+                              <p className="text-sm text-muted-foreground mt-1">{chapter.summary}</p>
                             )}
-                            {section.guidanceNotes && (
+                            {chapter.guidanceNotes && (
                               <p className="text-xs text-muted-foreground mt-2 italic">
-                                <span className="font-medium">Guidance:</span> {section.guidanceNotes}
+                                <span className="font-medium">Guidance:</span> {chapter.guidanceNotes}
+                              </p>
+                            )}
+                            {chapter.sections && chapter.sections.length > 0 && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {chapter.sections.length} sections
                               </p>
                             )}
                           </div>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => {
-                              setSelectedOutlineSection(section.id);
-                              setChapterForm({ ...EMPTY_CHAPTER, title: section.title });
-                              setShowOutlineView(false);
-                              openChapterDialog();
-                            }}
-                            data-testid={`button-create-from-outline-${section.id}`}
-                          >
-                            <Plus className="w-4 h-4 mr-1" />
-                            Create Chapter
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            {chapter.approvalStatus !== "approved" && (
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => handleApproveOutlineChapter(chapter.id)}
+                                data-testid={`button-approve-chapter-${chapter.id}`}
+                              >
+                                <Check className="w-4 h-4 mr-1" />
+                                Approve
+                              </Button>
+                            )}
+                            <Button 
+                              size="sm" 
+                              variant={chapter.approvalStatus === "approved" ? "default" : "ghost"}
+                              disabled={chapter.approvalStatus !== "approved"}
+                              onClick={() => {
+                                setSelectedOutlineChapter(chapter.id);
+                                setChapterForm({ ...EMPTY_CHAPTER, title: chapter.title });
+                                setShowOutlineView(false);
+                                openChapterDialog();
+                              }}
+                              data-testid={`button-create-from-outline-${chapter.id}`}
+                            >
+                              <Plus className="w-4 h-4 mr-1" />
+                              Create Chapter
+                            </Button>
+                          </div>
                         </div>
+                        
+                        {/* Expanded sections */}
+                        {expandedChapters.has(chapter.id) && chapter.sections && chapter.sections.length > 0 && (
+                          <div className="mt-4 ml-16 space-y-2 border-l-2 border-primary/20 pl-4">
+                            {chapter.sections.map((section, sIndex) => (
+                              <div key={section.id} className="py-2" data-testid={`section-${section.id}`}>
+                                <div className="flex items-start gap-2">
+                                  <span className="text-sm text-muted-foreground font-medium">{index + 1}.{sIndex + 1}</span>
+                                  <div className="flex-1">
+                                    <p className="text-sm font-medium">{section.title}</p>
+                                    {section.summary && (
+                                      <p className="text-xs text-muted-foreground">{section.summary}</p>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </Card>
                   ))}
                 </div>
               )}
 
-              {/* Cover Prompt Display */}
-              {selectedBook.coverPrompt && (
-                <Card className="mt-6">
-                  <CardHeader>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Image className="w-5 h-5" />
-                      AI Cover Prompt
-                    </CardTitle>
-                    <CardDescription>Use this prompt with an image generation tool to create your book cover</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="bg-muted p-4 rounded-lg text-sm whitespace-pre-wrap">
-                      {selectedBook.coverPrompt}
+              {/* Cover Image Section */}
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Image className="w-5 h-5" />
+                    Book Cover
+                  </CardTitle>
+                  <CardDescription>Generate an AI-powered cover image for your book</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {selectedBook.coverImageUrl && (
+                    <div className="flex justify-center">
+                      <img 
+                        src={selectedBook.coverImageUrl} 
+                        alt="Book cover" 
+                        className="max-w-xs rounded-lg shadow-lg"
+                        data-testid="img-book-cover"
+                      />
                     </div>
-                  </CardContent>
-                </Card>
-              )}
+                  )}
+                  {selectedBook.coverPrompt && (
+                    <div className="bg-muted p-4 rounded-lg">
+                      <p className="text-xs text-muted-foreground mb-2">Cover prompt used:</p>
+                      <p className="text-sm">{selectedBook.coverPrompt}</p>
+                    </div>
+                  )}
+                  <Button 
+                    onClick={handleGenerateCover}
+                    disabled={generatingCover}
+                    className="w-full"
+                    data-testid="button-generate-cover"
+                  >
+                    {generatingCover ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Generating Cover Image...
+                      </>
+                    ) : selectedBook.coverImageUrl ? (
+                      <>
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Regenerate Cover Image
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Generate Cover Image with AI
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
           ) : (
             /* Chapters View */

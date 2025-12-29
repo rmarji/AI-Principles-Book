@@ -323,9 +323,15 @@ export async function registerRoutes(
       if (allOutlineChapters.length > 0) {
         outlineContext = `\n\nBook Outline:\n${allOutlineChapters.map((c, i) => `${i + 1}. ${c.title}: ${c.summary || ''}`).join('\n')}`;
         
-        // If a specific outline chapter is selected, include its guidance and sections
+        // If a specific outline chapter is selected, verify it's approved before generating
         if (outlineChapterId) {
           const chapter = allOutlineChapters.find(c => c.id === outlineChapterId);
+          if (chapter && chapter.approvalStatus !== "approved") {
+            return res.status(400).json({ 
+              error: "Outline chapter must be approved before generating content",
+              approvalStatus: chapter.approvalStatus
+            });
+          }
           if (chapter) {
             chapterGuidance = `\n\nYou are writing Chapter ${chapter.sortOrder + 1}: "${chapter.title}"
 ${chapter.summary ? `Chapter summary: ${chapter.summary}` : ''}
