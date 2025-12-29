@@ -293,6 +293,58 @@ export async function registerRoutes(
     }
   });
 
+  // Generate chapter content with AI
+  app.post("/api/books/:bookId/chapters/generate", async (req, res) => {
+    try {
+      const bookId = parseInt(req.params.bookId);
+      const { prompt, title, context } = req.body;
+      
+      if (!prompt) {
+        return res.status(400).json({ error: "Prompt is required" });
+      }
+
+      // Get book info for context
+      const book = await db.select().from(books).where(eq(books.id, bookId));
+      if (book.length === 0) {
+        return res.status(404).json({ error: "Book not found" });
+      }
+      const bookInfo = book[0];
+
+      const systemPrompt = `You are an expert author and content writer. You are writing content for a book titled "${bookInfo.title}"${bookInfo.subtitle ? ` (${bookInfo.subtitle})` : ''} by ${bookInfo.authors}.
+
+${bookInfo.description ? `Book description: ${bookInfo.description}` : ''}
+
+Write engaging, professional book chapter content in Markdown format. Include:
+- Clear headings and subheadings (use ## for main sections, ### for subsections)
+- Practical examples and real-world applications
+- Actionable insights and takeaways
+- A logical flow from introduction to conclusion
+- Professional tone appropriate for business/leadership audiences
+
+${context ? `Additional context from the author: ${context}` : ''}
+
+Write the full chapter content based on the user's request. Do not include a title heading - just start with the introduction or first section.`;
+
+      const message = await anthropic.messages.create({
+        model: "claude-sonnet-4-5",
+        max_tokens: 8000,
+        system: systemPrompt,
+        messages: [{ role: "user", content: prompt }]
+      });
+
+      const generatedContent = message.content[0].type === 'text' ? message.content[0].text : '';
+      
+      res.json({ 
+        content: generatedContent,
+        title: title || "New Chapter",
+        wordCount: countWords(generatedContent)
+      });
+    } catch (error) {
+      console.error("Error generating chapter:", error);
+      res.status(500).json({ error: "Failed to generate chapter content" });
+    }
+  });
+
   // ===== MIGRATION: Import existing book into database =====
   app.post("/api/migrate/seed-default-book", async (req, res) => {
     try {
