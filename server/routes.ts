@@ -6,7 +6,7 @@ import path from "path";
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
 import { db } from "./db";
-import { critiques, critiqueFindings, editorialGuidelines, promptsConfig, books, chapters, outlineChapters, outlineSections, insertBookSchema, insertChapterSchema, insertOutlineChapterSchema, insertOutlineSectionSchema } from "@shared/schema";
+import { critiques, critiqueFindings, editorialGuidelines, promptsConfig, books, chapters, outlineChapters, outlineSections, indexEntries, insertBookSchema, insertChapterSchema, insertOutlineChapterSchema, insertOutlineSectionSchema } from "@shared/schema";
 import { DEFAULT_PROMPTS, type PromptsConfig, type CritiquePerspective } from "@shared/prompts";
 import { eq, desc, asc } from "drizzle-orm";
 import { generateImageBuffer } from "./replit_integrations/image/client";
@@ -771,6 +771,165 @@ Return ONLY the image generation prompt, nothing else.`;
     } catch (error) {
       console.error("Error generating cover prompt:", error);
       res.status(500).json({ error: "Failed to generate cover prompt" });
+    }
+  });
+
+  // ===== BOOK INDEX =====
+  
+  // Get book index
+  app.get("/api/books/:bookId/index", async (req, res) => {
+    try {
+      const bookId = parseInt(req.params.bookId);
+      const entries = await db.select().from(indexEntries)
+        .where(eq(indexEntries.bookId, bookId))
+        .orderBy(asc(indexEntries.term));
+      
+      res.json(entries);
+    } catch (error) {
+      console.error("Error getting book index:", error);
+      res.status(500).json({ error: "Failed to get book index" });
+    }
+  });
+
+  // Generate book index using AI
+  app.post("/api/books/:bookId/index/generate", async (req, res) => {
+    try {
+      const bookId = parseInt(req.params.bookId);
+      
+      // Get book info
+      const book = await db.select().from(books).where(eq(books.id, bookId));
+      if (book.length === 0) {
+        return res.status(404).json({ error: "Book not found" });
+      }
+      const bookInfo = book[0];
+
+      // Get all chapters for this book
+      const bookChapters = await db.select().from(chapters)
+        .where(eq(chapters.bookId, bookId))
+        .orderBy(asc(chapters.sortOrder));
+
+      if (bookChapters.length === 0) {
+        return res.status(400).json({ error: "No chapters found to generate index from" });
+      }
+
+      // Build chapter content for AI analysis
+      const chapterContents = bookChapters.map(ch => ({
+        id: ch.id,
+        title: ch.title,
+        sortOrder: ch.sortOrder,
+        content: ch.content || ''
+      }));
+
+      const systemPrompt = `You are an expert book indexer. Your task is to create a comprehensive index for a book by extracting key terms, concepts, names, and topics.
+
+For each term, identify:
+1. The term itself (use consistent capitalization)
+2. A brief description (1 sentence max)
+3. Which chapters it appears in (by their index numbers in the array, 0-based)
+4. A category: "concepts", "people", "tools", "frameworks", "best-practices", or "general"
+
+Guidelines:
+- Extract 30-60 meaningful terms
+- Focus on important concepts, not common words
+- Include technical terms, methodologies, and key ideas
+- Group related terms logically
+- Be precise about chapter references - only list chapters where the term is actually discussed
+
+Return your response as a JSON array with this structure:
+[
+  {
+    "term": "Term Name",
+    "description": "Brief one-sentence description",
+    "chapterIndices": [0, 2, 5],
+    "category": "concepts"
+  }
+]
+
+Return ONLY the JSON array, no other text.`;
+
+      const userPrompt = `Generate an index for this book:
+
+Title: "${bookInfo.title}"${bookInfo.subtitle ? ` - ${bookInfo.subtitle}` : ''}
+Authors: ${bookInfo.authors}
+
+Chapters:
+${chapterContents.map((ch, i) => `[${i}] ${ch.title}:\n${ch.content?.substring(0, 2000) || '(No content yet)'}\n`).join('\n---\n')}
+
+Create a comprehensive index with key terms, concepts, and references.`;
+
+      const message = await anthropic.messages.create({
+        model: "claude-sonnet-4-5",
+        max_tokens: 4000,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userPrompt }]
+      });
+
+      const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
+      
+      // Parse the JSON response
+      let indexData: Array<{
+        term: string;
+        description?: string;
+        chapterIndices: number[];
+        category?: string;
+      }>;
+      
+      try {
+        // Extract JSON from response (handle markdown code blocks)
+        const jsonMatch = responseText.match(/\[[\s\S]*\]/);
+        if (!jsonMatch) {
+          throw new Error("No JSON array found in response");
+        }
+        indexData = JSON.parse(jsonMatch[0]);
+      } catch (parseError) {
+        console.error("Error parsing index JSON:", parseError);
+        return res.status(500).json({ error: "Failed to parse AI response" });
+      }
+
+      // Delete existing index entries for this book
+      await db.delete(indexEntries).where(eq(indexEntries.bookId, bookId));
+
+      // Convert chapter indices to chapter IDs and insert new entries
+      const newEntries = indexData.map(entry => ({
+        bookId,
+        term: entry.term,
+        description: entry.description || null,
+        chapterIds: entry.chapterIndices
+          .filter(i => i >= 0 && i < bookChapters.length)
+          .map(i => bookChapters[i].id),
+        category: entry.category || 'general'
+      }));
+
+      // Insert all entries
+      if (newEntries.length > 0) {
+        await db.insert(indexEntries).values(newEntries);
+      }
+
+      // Fetch and return the newly created entries
+      const entries = await db.select().from(indexEntries)
+        .where(eq(indexEntries.bookId, bookId))
+        .orderBy(asc(indexEntries.term));
+
+      res.json({ 
+        message: "Index generated successfully", 
+        count: entries.length,
+        entries 
+      });
+    } catch (error) {
+      console.error("Error generating book index:", error);
+      res.status(500).json({ error: "Failed to generate book index" });
+    }
+  });
+
+  // Delete book index
+  app.delete("/api/books/:bookId/index", async (req, res) => {
+    try {
+      const bookId = parseInt(req.params.bookId);
+      await db.delete(indexEntries).where(eq(indexEntries.bookId, bookId));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting book index:", error);
+      res.status(500).json({ error: "Failed to delete book index" });
     }
   });
 

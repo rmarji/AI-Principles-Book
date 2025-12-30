@@ -214,3 +214,22 @@ export const insertPromptsConfigSchema = createInsertSchema(promptsConfig).omit(
 
 export type PromptsConfigRow = typeof promptsConfig.$inferSelect;
 export type InsertPromptsConfig = z.infer<typeof insertPromptsConfigSchema>;
+
+// Book Index - automatically generated index of terms with chapter references
+export const indexEntries = pgTable("index_entries", {
+  id: serial("id").primaryKey(),
+  bookId: integer("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
+  term: text("term").notNull(),
+  description: text("description"), // Brief explanation of the term
+  chapterIds: integer("chapter_ids").array().notNull(), // Array of chapter IDs where term appears
+  category: text("category"), // Optional category for grouping (concepts, people, tools, etc.)
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const insertIndexEntrySchema = createInsertSchema(indexEntries).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type IndexEntry = typeof indexEntries.$inferSelect;
+export type InsertIndexEntry = z.infer<typeof insertIndexEntrySchema>;
