@@ -7,6 +7,7 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import Chapter from "@/pages/Chapter";
 import TableOfContents from "@/pages/TableOfContents";
+import BookIndex from "@/pages/BookIndex";
 import EditorialGuidelines from "@/pages/EditorialGuidelines";
 import Assessment from "@/pages/Assessment";
 import Dashboard from "@/pages/Dashboard";
@@ -21,6 +22,7 @@ function AppRouter() {
         <Route path="/chapter/:id" component={Chapter} />
         <Route path="/book/:bookId" component={TableOfContents} />
         <Route path="/book/:bookId/chapter/:id" component={Chapter} />
+        <Route path="/book/:bookId/index" component={BookIndex} />
         <Route path="/editorial-guidelines" component={EditorialGuidelines} />
         <Route path="/assessment" component={Assessment} />
         <Route component={NotFound} />

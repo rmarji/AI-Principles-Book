@@ -1,7 +1,7 @@
 import { Link, useRoute } from "wouter";
 import { bookContent } from "../lib/bookContent";
 import { BOOK_TITLE, AUTHORS } from "../lib/exportBook";
-import { ChevronRight, CheckCircle2, Clock, Lock, ArrowLeft } from "lucide-react";
+import { ChevronRight, CheckCircle2, Clock, Lock, ArrowLeft, BookOpen } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
@@ -165,6 +165,36 @@ export default function TableOfContents() {
                 </motion.div>
               );
             })}
+            
+            {/* Index Link */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3, delay: dbChapters.length * 0.05 }}
+            >
+              <Link 
+                href={`/book/${bookId}/index`}
+                className="block"
+                data-testid="toc-link-index"
+              >
+                <div className="p-4 rounded-lg border transition-all hover:border-primary/50 hover:bg-muted/30 hover:shadow-sm group mt-6 border-dashed">
+                  <div className="flex items-start gap-4">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-full shrink-0 bg-muted text-muted-foreground">
+                      <BookOpen size={18} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h2 className="font-heading font-semibold text-lg group-hover:text-primary transition-colors">
+                        Index
+                      </h2>
+                      <p className="text-sm text-muted-foreground">
+                        Alphabetical listing of key terms and concepts
+                      </p>
+                    </div>
+                    <ChevronRight className="shrink-0 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" size={20} />
+                  </div>
+                </div>
+              </Link>
+            </motion.div>
           </div>
         )}
       </motion.div>

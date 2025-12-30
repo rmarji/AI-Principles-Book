@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
-import { Plus, Book, Edit2, Trash2, MoreVertical, FileText, Loader2, Sparkles, Home, ArrowLeft, ChevronRight, ChevronDown, Wand2, Save, X, GripVertical, ListTree, Image, Check, Clock } from "lucide-react";
+import { Plus, Book, Edit2, Trash2, MoreVertical, FileText, Loader2, Sparkles, Home, ArrowLeft, ChevronRight, ChevronDown, Wand2, Save, X, GripVertical, ListTree, Image, Check, Clock, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -59,6 +59,10 @@ export default function Dashboard() {
   
   // Cover prompt and image state
   const [generatingCover, setGeneratingCover] = useState(false);
+  
+  // Index state
+  const [indexEntries, setIndexEntries] = useState<any[]>([]);
+  const [generatingIndex, setGeneratingIndex] = useState(false);
 
   useEffect(() => {
     fetchBooks();
@@ -68,6 +72,7 @@ export default function Dashboard() {
     if (selectedBook) {
       fetchChapters(selectedBook.id);
       fetchOutline(selectedBook.id);
+      fetchIndex(selectedBook.id);
     }
   }, [selectedBook]);
 
@@ -108,6 +113,39 @@ export default function Dashboard() {
       console.error("Failed to fetch outline:", error);
     } finally {
       setLoadingOutline(false);
+    }
+  };
+
+  const fetchIndex = async (bookId: number) => {
+    try {
+      const response = await fetch(`/api/books/${bookId}/index`);
+      const data = await response.json();
+      setIndexEntries(data);
+    } catch (error) {
+      console.error("Failed to fetch index:", error);
+    }
+  };
+
+  const handleGenerateIndex = async () => {
+    if (!selectedBook) return;
+    setGeneratingIndex(true);
+    try {
+      const response = await fetch(`/api/books/${selectedBook.id}/index/generate`, {
+        method: "POST"
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setIndexEntries(data.entries);
+        toast({ title: "Index Generated", description: `Created ${data.count} index entries` });
+      } else {
+        const error = await response.json();
+        toast({ title: "Error", description: error.error || "Failed to generate index", variant: "destructive" });
+      }
+    } catch (error) {
+      console.error("Error generating index:", error);
+      toast({ title: "Error", description: "Failed to generate index", variant: "destructive" });
+    } finally {
+      setGeneratingIndex(false);
     }
   };
 
@@ -729,6 +767,72 @@ export default function Dashboard() {
                       </>
                     )}
                   </Button>
+                </CardContent>
+              </Card>
+
+              {/* Book Index Section */}
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <BookOpen className="w-5 h-5" />
+                    Book Index
+                  </CardTitle>
+                  <CardDescription>
+                    Generate an alphabetical index of key terms, concepts, and topics from your chapters
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {indexEntries.length > 0 && (
+                    <div className="bg-muted p-4 rounded-lg">
+                      <p className="text-sm font-medium mb-2">Current Index: {indexEntries.length} entries</p>
+                      <div className="flex flex-wrap gap-2 max-h-32 overflow-auto">
+                        {indexEntries.slice(0, 20).map((entry) => (
+                          <span key={entry.id} className="text-xs bg-background px-2 py-1 rounded border">
+                            {entry.term}
+                          </span>
+                        ))}
+                        {indexEntries.length > 20 && (
+                          <span className="text-xs text-muted-foreground">...and {indexEntries.length - 20} more</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {chapters.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Add chapters before generating an index</p>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={handleGenerateIndex}
+                        disabled={generatingIndex}
+                        className="flex-1"
+                        data-testid="button-generate-index"
+                      >
+                        {generatingIndex ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Generating Index...
+                          </>
+                        ) : indexEntries.length > 0 ? (
+                          <>
+                            <Sparkles className="w-4 h-4 mr-2" />
+                            Regenerate Index
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-4 h-4 mr-2" />
+                            Generate Index with AI
+                          </>
+                        )}
+                      </Button>
+                      {indexEntries.length > 0 && (
+                        <Link href={`/book/${selectedBook.id}/index`}>
+                          <Button variant="outline" data-testid="button-view-index">
+                            View Index
+                          </Button>
+                        </Link>
+                      )}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
