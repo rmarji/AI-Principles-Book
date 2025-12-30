@@ -51,8 +51,11 @@ The server provides:
 
 Uses Drizzle ORM with PostgreSQL configuration:
 - `users` table with id, username, and password fields
-- `books` table for managing multiple books (title, subtitle, authors, description, coverColor, status, isDefault)
+- `books` table for managing multiple books (title, subtitle, authors, description, coverColor, coverImageUrl, status, isDefault)
 - `chapters` table linked to books via bookId (title, chapterNumber, content, status)
+- `outline_chapters` table for book outline with approval workflow (title, summary, approvalStatus)
+- `outline_sections` table for hierarchical subsections within outline chapters
+- `index_entries` table for auto-generated book indexes (term, description, chapterIds array, category)
 - Database schema defined in `shared/schema.ts`
 
 ### Multibook Foundation (Phase 1)
