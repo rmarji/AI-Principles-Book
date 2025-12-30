@@ -103,14 +103,18 @@ Here's what happened next, while David went home for the weekend:
 - Sent individual calendar inquiries to the three managers with conflicts at that time, noting meeting priority
 - Received confirmation that two could move their conflicts; one could not
 - Identified next-best alternative: Wednesday 9 AM Central (all available)
-- Created Zoom meeting
+- **Encountered ambiguity:** Found two managers with hard conflicts at that time—one blocked for "Executive Meeting" and another for "Client Visit"
+- **Flagged for human judgment:** Sent David a brief message Saturday morning: "Two managers have hard conflicts Wednesday 9 AM. Proceed with 5/7 attendance, or should I find alternative time for full group?"
+- David replied Sunday evening: "Proceed with 5—we'll catch up the other two separately."
+- Created Zoom meeting for Wednesday 9 AM with confirmed five attendees
 - Generated calendar invites with meeting agenda based on Q2 review objectives
 - Retrieved Q1 performance dashboard from company SharePoint
 - Attached dashboard to invites
 - Sent invites to all participants
 - Posted meeting details to the #regional-managers Slack channel
+- Separately messaged the two unavailable managers about scheduling a follow-up briefing
 
-**Outcome:** By Monday morning, David had a fully scheduled meeting with 100% attendance confirmed, all materials distributed, and a Slack confirmation thread where managers were already discussing agenda items. Total time invested by David: 2 minutes to write the initial instruction.
+**Outcome:** By Monday morning, David had a scheduled meeting with 5/7 attendance confirmed (higher than his typical first-attempt success rate), all materials distributed, and a Slack confirmation thread where managers were already discussing agenda items. The two managers with conflicts had follow-up briefings scheduled for later that week. Total time invested by David: 2 minutes to write the initial instruction plus 30 seconds to reply to the clarification request.
 
 This is the difference between tools, copilots, and agents:
 - A **tool** would have shown David available times if he searched for them
