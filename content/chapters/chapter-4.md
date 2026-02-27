@@ -766,3 +766,23 @@ In the next chapter, we explore how to design the transitions between human and 
 9. **Ignoring Security Considerations**: Granting agents access to sensitive information without appropriate governance and oversight.
 
 10. **Static Configuration**: Failing to update agent instructions as our work evolves, leaving agents optimized for outdated patterns.
+
+---
+
+## Works Cited
+
+1. Williams, Roy H. *The Wizard of Ads: Turning Words into Magic and Dreamers into Millionaires.* Bard Press, 1998.
+
+2. Asana. "Anatomy of Work Index 2024." Asana, 2024, https://asana.com/resources/anatomy-of-work.
+
+3. Toggl Track. "Time Tracking Software." Toggl, 2024, https://toggl.com/track/.
+
+4. RescueTime. "Automatic Time-Tracking Software." RescueTime, 2024, https://www.rescuetime.com/.
+
+5. Clockify. "Free Time Tracking Software." Clockify, 2024, https://clockify.me/.
+
+6. Drucker, Peter F. *The Effective Executive: The Definitive Guide to Getting the Right Things Done.* Harper Business, 2006 (original 1967).
+
+7. Newport, Cal. *Deep Work: Rules for Focused Success in a Distracted World.* Grand Central Publishing, 2016.
+
+8. McKinsey & Company. "The State of AI in 2024: Generative AI's Breakout Year." McKinsey Global Survey, May 2024.
