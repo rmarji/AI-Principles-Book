@@ -3,7 +3,7 @@
 > "The real question is not whether machines think but whether men do."
 > —B.F. Skinner, Behavioral Psychologist
 
-Skinner posed this question in 1969, challenging us to examine not the machine's capability but our own—whether we're truly applying our human capacity for thinking to problems that matter, or squandering it on tasks that don't require it. Today, as AI agents emerge that can handle much of the coordination and routine work that fills our days, his question becomes urgent: Are we thinking about what truly requires human thought, or are we on autopilot, buried in administrivia?
+Skinner posed this question in 1969, challenging us to examine not the machine's capability but our own, whether we're truly applying our human capacity for thinking to problems that matter, or squandering it on tasks that don't require it. Today, as AI agents emerge that can handle much of the coordination and routine work that fills our days, his question becomes urgent: Are we thinking about what truly requires human thought, or are we on autopilot, buried in administrivia?
 
 It's 7:43 AM on a Tuesday, and Sarah Chen, CEO of a mid-sized manufacturing firm, has already spent 47 minutes on email. Three scheduling conflicts need resolution. Her executive assistant is waiting for decisions on six meeting requests. A board member needs background research for Thursday's strategy session. And somewhere in her overflowing inbox is the competitive intelligence her product team requested last week—research she hasn't had time to compile.
 
@@ -13,7 +13,7 @@ Now imagine Sarah's morning differently. She opens her laptop to find the schedu
 
 This is not science fiction. This is the difference AI agents make today.
 
-According to McKinsey Global Institute research, executives spend 61% of their time on work coordination and communication activities—tasks that could be substantially handled by AI agents—leaving only 39% for the strategic thinking, relationship building, and creative problem-solving that only humans can do. AI agents represent the first technology capable of reclaiming significant portions of that 61%.
+According to McKinsey Global Institute research, executives spend 61% of their time on work coordination and communication activities, tasks that could be substantially handled by AI agents. This leaves only 39% for the strategic thinking, relationship building, and creative problem-solving that only humans can do. AI agents represent the first technology capable of reclaiming significant portions of that 61%.
 
 This book is built on a simple premise: leaders who understand AI agents and learn to work with them effectively will dramatically outperform those who do not. Not because AI will replace human judgment—it will not—but because the combination of human wisdom and AI capability creates something more powerful than either alone.
 
@@ -25,9 +25,9 @@ This first principle establishes the foundation. Before you can delegate to AI a
 
 ## The Leadership Time Crisis
 
-Every leader faces the same fundamental constraint: time. There are only so many hours in a day, and the demands on those hours consistently exceed supply. Meetings fill calendars. Emails accumulate. Reports need review. Decisions require attention. And somewhere in the margins, leaders try to find time for the work that actually matters—strategic thinking, relationship building, developing people, and creative problem-solving.
+Every leader faces the same fundamental constraint: time. There are only so many hours in a day, and the demands on those hours consistently exceed supply. Meetings fill calendars. Emails accumulate. Reports need review. Decisions require attention. And somewhere in the margins, leaders try to find time for the work that actually matters, strategic thinking, relationship building, developing people, and creative problem-solving.
 
-The problem is not that leaders work too little. Most work far too much. The problem is that an enormous portion of that work is administrative, coordinative, and routine—valuable in the sense that it must be done, but not valuable in the sense that it requires the unique capabilities of an experienced leader.
+The problem is not that leaders work too little. Most work far too much. The problem is that an enormous portion of that work is administrative, coordinative, and routine, valuable in the sense that it must be done, but not valuable in the sense that it requires the unique capabilities of an experienced leader.
 
 Consider your own calendar. How much time do you spend on:
 - Scheduling and coordination
@@ -40,7 +40,7 @@ Consider your own calendar. How much time do you spend on:
 
 These activities consume leadership bandwidth without leveraging leadership capabilities. They are necessary but not distinctive. Anyone with the right information and training could do them.
 
-For decades, leaders have delegated what they could to human assistants, teams, and contractors. But human delegation has limits. People have their own constraints—availability, expertise, attention span, cost. There has always been a floor below which delegation was not practical or economical. Leaders have been stuck doing substantial amounts of work that was beneath their pay grade but above what could reasonably be delegated.
+For decades, leaders have delegated what they could to human assistants, teams, and contractors. But human delegation has limits. People have their own constraints, (availability, expertise, attention span, cost). There has always been a floor below which delegation was not practical or economical. Leaders have been stuck doing substantial amounts of work that was beneath their pay grade but above what could reasonably be delegated.
 
 AI agents change this equation fundamentally.
 
@@ -52,7 +52,7 @@ To understand AI agents, you must first understand the evolution that produced t
 
 ### Phase 1: AI Tools
 
-The first phase gave us AI as a tool—software that performs specific functions when explicitly invoked. You use a tool, it produces a result, and you take that result and decide what to do with it.
+The first phase gave us AI as a tool: software that performs specific functions when explicitly invoked. You use a tool, it produces a result, and you take that result and decide what to do with it.
 
 A spell-checker is an AI tool. It identifies potential errors and suggests corrections. You review the suggestions and accept or reject them. The tool has no context about your goals, no memory of previous interactions, no ability to take action beyond highlighting and suggesting. It does what it is designed to do, nothing more.
 
@@ -60,7 +60,7 @@ Translation software, recommendation algorithms, search engines—these are all 
 
 ### Phase 2: AI Copilots
 
-The second phase introduced AI as a copilot—an intelligent assistant that works alongside you in real-time, augmenting your capabilities as you work.
+The second phase introduced AI as a copilot: an intelligent assistant that works alongside you in real-time, augmenting your capabilities as you work.
 
 Copilots differ from tools in their interactivity and contextual awareness. A writing copilot does not just check your spelling; it suggests how to complete your sentences, offers alternative phrasings, and adapts its suggestions based on what you are writing. A coding copilot does not just highlight errors; it writes code alongside you, anticipating what you might need next based on the code you have already written.
 
@@ -70,9 +70,9 @@ Copilots represented a significant advance over tools. They moved AI from "use w
 
 ### Phase 3: AI Agents
 
-The third phase—the phase we are now entering—introduces AI as an agent. And this is where everything changes.
+The third phase, the phase we are now entering—introduces AI as an agent. And this is where everything changes.
 
-An AI agent is an autonomous system that pursues goals on your behalf. You give it an objective, and it figures out how to achieve that objective—making decisions, taking actions, using tools, and adapting to circumstances—with minimal or no ongoing supervision.
+An AI agent is an autonomous system that pursues goals on your behalf. You give it an objective, and it figures out how to achieve that objective, making decisions, taking actions, using tools, and adapting to circumstances with minimal or no ongoing supervision.
 
 The distinction is profound. Tools respond to commands. Copilots assist with tasks. Agents pursue goals.
 
@@ -127,19 +127,19 @@ The emergence of practical AI agents in 2024-2025 results from several technolog
 
 ### Large Language Models
 
-The foundation is large language models—AI systems trained on vast amounts of text that can understand and generate human language with remarkable fluency. Models like GPT-4o, Claude 3.5 Sonnet, Claude Opus, Gemini 2.0, and OpenAI's o1 reasoning models can engage in nuanced conversations, reason through complex problems, and produce coherent outputs across virtually any domain. Extended context windows now reach 200,000+ tokens, enabling agents to process entire codebases, lengthy documents, or extended conversation histories in a single interaction.
+The foundation is large language models, AI systems trained on vast amounts of text that can understand and generate human language with remarkable fluency. Models like GPT-4o, Claude 3.5 Sonnet, Claude Opus, Gemini 2.0, and OpenAI's o1 reasoning models can engage in nuanced conversations, reason through complex problems, and produce coherent outputs across virtually any domain. Extended context windows now reach 200,000+ tokens, enabling agents to process entire codebases, lengthy documents, or extended conversation histories in a single interaction.
 
 These models provide agents with their cognitive capabilities: the ability to understand instructions, reason about goals, evaluate options, and communicate results. Without sophisticated language understanding, agents would be limited to narrow, pre-programmed behaviors.
 
 ### Tool Use and APIs
 
-Agents need to act, not just think. The development of reliable tool use—where AI models can invoke external capabilities through APIs and function calls—gives agents their hands. An agent can browse the web, send emails, query databases, create documents, and interact with virtually any digital system that exposes an interface.
+Agents need to act, not just think. The development of reliable tool use, where AI models can invoke external capabilities through APIs and function calls—gives agents their hands. An agent can browse the web, send emails, query databases, create documents, and interact with virtually any digital system that exposes an interface.
 
 The standardization of these interfaces, particularly through frameworks like OpenAI's function calling and Anthropic's tool use, has made it practical to give agents broad capabilities without custom integration for each action.
 
 ### Memory and Context
 
-Early AI systems had no memory—each interaction started fresh. Modern agents can maintain context across sessions through conversation history, semantic memory systems, and long-term knowledge stores. This persistence transforms agents from isolated interactions into ongoing relationships.
+Early AI systems had no memory, each interaction started fresh. Modern agents can maintain context across sessions through conversation history, semantic memory systems, and long-term knowledge stores. This persistence transforms agents from isolated interactions into ongoing relationships.
 
 An agent that remembers your preferences, your projects, your relationships, and your history becomes increasingly valuable over time. Memory is what allows agents to become personalized rather than generic.
 
@@ -159,9 +159,9 @@ The word "agent" is sometimes used loosely, applied to any AI that seems particu
 
 Agents pursue objectives rather than executing instructions. You define what you want achieved; the agent determines how to achieve it.
 
-This distinction matters enormously. When you give instructions, you bear the cognitive load of planning—figuring out the steps, anticipating complications, specifying contingencies. When you give objectives, the agent bears that load. You are freed to think about outcomes while the agent thinks about execution.
+This distinction matters enormously. When you give instructions, you bear the cognitive load of planning, figuring out the steps, anticipating complications, specifying contingencies. When you give objectives, the agent bears that load. You are freed to think about outcomes while the agent thinks about execution.
 
-A non-agent AI might be instructed: "Search for 'AI market trends,' open the first five results, extract key statistics, and format them in a table." Every step must be specified because the AI does not understand the goal—only the actions.
+A non-agent AI might be instructed: "Search for 'AI market trends,' open the first five results, extract key statistics, and format them in a table." Every step must be specified because the AI does not understand the goal; the AI only understands the actions.
 
 An agent, given the objective "prepare a competitive intelligence brief on AI adoption in our industry," will determine what searches to conduct, what sources to prioritize, what information to extract, how to synthesize findings, and what format will be most useful. The goal directs behavior; specific actions emerge from goal pursuit.
 
@@ -169,7 +169,7 @@ An agent, given the objective "prepare a competitive intelligence brief on AI ad
 
 Agents do not just act; they think. They analyze situations, consider options, anticipate consequences, and make judgments about how to proceed.
 
-This reasoning capability allows agents to handle novel situations—circumstances not explicitly covered by their instructions or training. When a planned approach fails, an agent can reason about why it failed and try something different. When new information emerges, an agent can update its approach accordingly.
+This reasoning capability allows agents to handle novel situations, circumstances not explicitly covered by their instructions or training. When a planned approach fails, an agent can reason about why it failed and try something different. When new information emerges, an agent can update its approach accordingly.
 
 The reasoning may not be visible to you. You see the outcome—a well-researched brief, a successfully scheduled meeting, a problem solved while you slept. But behind that outcome is a chain of reasoning: goals decomposed into sub-goals, options evaluated against criteria, decisions made based on available information.
 
@@ -179,7 +179,7 @@ Agents can use tools to interact with the world. They can browse the web, send e
 
 This tool-use capability is what transforms agents from advisors to actors. An agent that can only provide information requires you to take action on that information. An agent that can use tools can take action itself—making things happen rather than just informing you about what might happen.
 
-The scope of an agent's action space—what tools it can use and what actions it can take—significantly shapes its utility. An agent limited to providing text responses is fundamentally less useful than one that can send emails, schedule meetings, update records, and interact with your digital environment.
+The scope of an agent's action space, what tools it can use and what actions it can take—significantly shapes its utility. An agent limited to providing text responses is fundamentally less useful than one that can send emails, schedule meetings, update records, and interact with your digital environment.
 
 ### Memory and Learning
 
