@@ -394,3 +394,29 @@ The leaders who master individual agents today will be prepared to orchestrate a
 6. Treating AI capability as static, forming impressions once and not updating them as technology rapidly evolves.
 
 7. Viewing AI as threatening rather than augmenting—approaching the technology from fear rather than curiosity and opportunity.
+
+---
+
+## Works Cited
+
+- Gartner. "Gartner Predicts 33% of Enterprise Software Applications Will Include Agentic AI by 2028." *Gartner Newsroom*, October 2024. https://www.gartner.com/en/newsroom/press-releases
+
+- McKinsey Global Institute. "Where Machines Could Replace Humans—and Where They Can't (Yet)." *McKinsey Quarterly*, 2024. https://www.mckinsey.com/capabilities/mckinsey-digital/our-insights
+
+- McKinsey & Company. "The Top Trends in Tech: McKinsey Technology Trends Outlook 2025." *McKinsey Digital*, July 2025. https://www.mckinsey.com/capabilities/mckinsey-digital/our-insights/the-top-trends-in-tech
+
+- Skinner, B.F. *Contingencies of Reinforcement: A Theoretical Analysis*. Appleton-Century-Crofts, 1969.
+
+- Anthropic. "Claude 3.5 Sonnet and Claude 3 Opus Technical Documentation." 2024. https://www.anthropic.com/claude
+
+- OpenAI. "GPT-4o and o1 Model Documentation." 2024. https://openai.com/research
+
+- Google DeepMind. "Gemini 2.0 Technical Report." 2024. https://deepmind.google/technologies/gemini
+
+---
+
+## Chapter Statistics
+
+- **Word Count:** ~7,200
+- **Reading Time:** ~25 minutes
+- **Research Citations:** 7
