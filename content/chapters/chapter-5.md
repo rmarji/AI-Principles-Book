@@ -175,6 +175,8 @@ AI workflows benefit from multiple types of feedback operating at different time
 
 **Output Quality Feedback** assesses the quality of workflow products. This might involve human review of AI outputs, automated quality checks against defined criteria, or comparison of outputs to reference standards. Quality feedback drives improvement in the work products workflows produce.
 
+Consider a cautionary example from software development. GitHub Copilot studies show ~26% more pull requests per week in randomized controlled trials involving 4,800 developers—an impressive productivity gain. However, an independent study of ~800 developers found no throughput lift combined with a 41% increase in bugs. This illustrates why quality feedback mechanisms are essential: productivity gains that come at the cost of quality create hidden debt that compounds over time. Without systematic quality tracking alongside throughput metrics, organizations may celebrate efficiency improvements while accumulating problems.
+
 **Outcome Feedback** connects workflow outputs to ultimate results. This type of feedback requires tracking what happens after workflow outputs enter the world. Did the recommended actions produce expected results? Did the predicted outcomes materialize? Did stakeholders find the outputs useful? Outcome feedback grounds workflow performance in real-world impact rather than internal metrics.
 
 **User Experience Feedback** captures how workflow participants experience their involvement. Do human participants find the workflow usable and valuable? Do they trust AI outputs? Are they engaged appropriately or experiencing automation fatigue? User experience feedback reveals issues that pure performance metrics might miss.
