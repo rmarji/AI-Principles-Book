@@ -189,7 +189,7 @@ Getting help for difficult ethical questions is a strength, not a weakness. Ethi
 
 AI regulation is evolving rapidly around the world, creating compliance obligations and shaping what responsible AI practice means in legal terms.
 
-The **European Union's AI Act** represents the most comprehensive framework, categorizing AI systems by risk level. Unacceptable risk applications are prohibited. High-risk applications face strict requirements. Limited risk applications face transparency requirements. Minimal risk applications face few specific regulations.
+The **European Union's AI Act**, finalized in March 2024, represents the most comprehensive framework, categorizing AI systems by risk level. Unacceptable risk applications (such as social scoring) are prohibited outright. High-risk applications (including hiring systems, credit scoring, and critical infrastructure) face strict requirements for transparency, human oversight, and documentation. Limited risk applications face transparency requirements. Minimal risk applications face few specific regulations. Organizations deploying AI in or serving EU markets must understand their obligations under this landmark regulation.
 
 The **United States** is taking a sector-specific approach, with different agencies developing guidance for healthcare AI, financial services AI, and employment AI.
 
@@ -379,3 +379,23 @@ The price of power is worth paying. Now go lead.
 9. Treating AI governance as compliance theater with unenforced policies.
 
 10. Waiting for regulatory requirements to force responsible practices rather than building governance proactively.
+
+---
+
+## Works Cited
+
+Anthropic. "Claude's Character." *Anthropic Research*, 2024. https://www.anthropic.com/research/claudes-character
+
+Bai, Yuntao, et al. "Constitutional AI: Harmlessness from AI Feedback." *arXiv preprint*, 2022. arXiv:2212.08073.
+
+European Parliament. "Artificial Intelligence Act." *Official Journal of the European Union*, March 2024. Regulation (EU) 2024/1689.
+
+IBM Institute for Business Value. "The Global AI Adoption Index 2024." *IBM Corporation*, 2024.
+
+McKinsey & Company. "The State of AI in 2025: Agents, Innovation, and Transformation." *McKinsey Global Institute*, November 2025.
+
+NIST. "Artificial Intelligence Risk Management Framework (AI RMF 1.0)." *National Institute of Standards and Technology*, January 2023.
+
+OpenAI. "GPT-4 System Card." *OpenAI Technical Report*, March 2023.
+
+Weidinger, Laura, et al. "Ethical and Social Risks of Harm from Language Models." *arXiv preprint*, 2021. arXiv:2112.04359.

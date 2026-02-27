@@ -127,7 +127,7 @@ The emergence of practical AI agents in 2024-2025 results from several technolog
 
 ### Large Language Models
 
-The foundation is large language models—AI systems trained on vast amounts of text that can understand and generate human language with remarkable fluency. Models like GPT-4, Claude, and Gemini can engage in nuanced conversations, reason through complex problems, and produce coherent outputs across virtually any domain.
+The foundation is large language models—AI systems trained on vast amounts of text that can understand and generate human language with remarkable fluency. Models like GPT-4o, Claude 3.5 Sonnet, Claude Opus, Gemini 2.0, and OpenAI's o1 reasoning models can engage in nuanced conversations, reason through complex problems, and produce coherent outputs across virtually any domain. Extended context windows now reach 200,000+ tokens, enabling agents to process entire codebases, lengthy documents, or extended conversation histories in a single interaction.
 
 These models provide agents with their cognitive capabilities: the ability to understand instructions, reason about goals, evaluate options, and communicate results. Without sophisticated language understanding, agents would be limited to narrow, pre-programmed behaviors.
 
@@ -145,7 +145,7 @@ An agent that remembers your preferences, your projects, your relationships, and
 
 ### Orchestration Frameworks
 
-Individual capabilities must be coordinated to pursue complex goals. Orchestration frameworks like LangChain, AutoGen, and Crew AI provide the architectures for agents to plan multi-step tasks, coordinate with other agents, and manage workflows over extended periods.
+Individual capabilities must be coordinated to pursue complex goals. Orchestration frameworks like LangChain, AutoGen, CrewAI, and Anthropic's Model Context Protocol (MCP) provide the architectures for agents to plan multi-step tasks, coordinate with other agents, and manage workflows over extended periods. These frameworks standardize how agents interact with tools, maintain context, and collaborate with each other.
 
 These frameworks handle the complexity of agent execution: breaking goals into subtasks, managing state, handling errors, and coordinating between multiple systems.
 

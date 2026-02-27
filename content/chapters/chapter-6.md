@@ -16,7 +16,7 @@ The key to aligned decisions is combining human judgment with AI-powered analysi
 
 *What if we could approach every significant decision with comprehensive research, rigorous analysis, multiple scenarios explored, assumptions challenged, and historical learning applied?*
 
-**Anchor Statistic:** Research from McKinsey Global Institute shows that companies using data-driven decision-making are 23 times more likely to acquire customers, 6 times more likely to retain customers, and 19 times more likely to be profitable, yet only 30% of executives report having access to the decision intelligence tools they need (Bughin, Jacques, et al. "Artificial Intelligence: The Next Digital Frontier?" *McKinsey Global Institute*, June 2017).
+**Anchor Statistic:** According to McKinsey's State of AI 2025 report, 88% of enterprises now use AI regularly in their operations, with 23% actively scaling agentic AI systems and another 39% in experimental deployment—yet organizations report that only 35% of AI projects deliver measurable business value, revealing a significant gap between AI adoption and effective decision intelligence (McKinsey & Company. "The State of AI in 2025: Agents, Innovation, and Transformation." *McKinsey Global Institute*, November 2025).
 
 ## The Decision-Making Imperative
 
@@ -678,6 +678,8 @@ The future belongs to leaders who make better decisions faster, learn from outco
 ## Works Cited
 
 Bughin, Jacques, et al. "Artificial Intelligence: The Next Digital Frontier?" *McKinsey Global Institute*, June 2017.
+
+McKinsey & Company. "The State of AI in 2025: Agents, Innovation, and Transformation." *McKinsey Global Institute*, November 2025.
 
 Carr, Nicholas. *The Glass Cage: Automation and Us*. W.W. Norton & Company, 2014.
 
