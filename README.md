@@ -1,5 +1,12 @@
 # The Leader's Guide to AI Teams
 
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/github/rmarji/AI-Principles-Book)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/rmarji/AI-Principles-Book)
+
+**One-click deploy:** Click either button above to deploy instantly.
+
+---
+
 An interactive digital book reader application for "The Leader's Guide to AI Teams" by Rayo Marji - a practical playbook for leaders to strategically integrate AI agents into their workflows and build AI-powered organizational structures.
 
 ## Features
