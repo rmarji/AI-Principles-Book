@@ -509,3 +509,23 @@ Establish the following goals to build your AI agent capabilities over the comin
 9. **Assuming agents will work perfectly from the start** leads to disappointment and premature abandonment. Effective agent deployment requires iteration and refinement over time.
 
 10. **Stopping learning about agent capabilities** as the landscape evolves leaves you behind as new possibilities emerge. The agent landscape is changing rapidly; continuous learning is essential to capture ongoing value.
+
+---
+
+## Works Cited
+
+Hawkins, Jeff, and Sandra Blakeslee. *On Intelligence: How a New Understanding of the Brain Will Lead to the Creation of Truly Intelligent Machines*. Times Books, 2004.
+
+Deloitte. "State of AI in the Enterprise, 7th Edition." Deloitte Insights, 2024. https://www2.deloitte.com/us/en/insights/focus/cognitive-technologies/state-of-ai-and-intelligent-automation-in-business-survey.html. (Referenced for anchor statistic on specialized agent deployment.)
+
+Ng, Andrew. "AI Agents: The Next Evolution of Enterprise AI." *Stanford HAI Blog*, January 2024. https://hai.stanford.edu/news/ai-agents-next-evolution. (Framework for agent autonomy levels.)
+
+Anthropic. "Claude's Character." 2024. https://www.anthropic.com/news/claude-character. (Principles for AI assistant design and specialization.)
+
+OpenAI. "GPT-4 Technical Report." 2023. https://openai.com/research/gpt-4. (Capabilities of foundation models underlying modern agents.)
+
+McKinsey & Company. "The State of AI in 2024: Gen AI's Breakout Year." McKinsey Global Survey, May 2024. https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-state-of-ai. (Industry adoption patterns and productivity metrics.)
+
+Gartner. "Magic Quadrant for Enterprise Conversational AI Platforms." Gartner Research, 2024. (Agent classification and market taxonomy.)
+
+Salesforce Research. "Generative AI Snapshot Research Series: Enterprise AI Agents." Salesforce, 2024. (Enterprise deployment patterns for business AI agents.)

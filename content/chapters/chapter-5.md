@@ -175,6 +175,8 @@ AI workflows benefit from multiple types of feedback operating at different time
 
 **Output Quality Feedback** assesses the quality of workflow products. This might involve human review of AI outputs, automated quality checks against defined criteria, or comparison of outputs to reference standards. Quality feedback drives improvement in the work products workflows produce.
 
+Consider a cautionary example from software development. GitHub Copilot studies show ~26% more pull requests per week in randomized controlled trials involving 4,800 developers—an impressive productivity gain. However, an independent study of ~800 developers found no throughput lift combined with a 41% increase in bugs. This illustrates why quality feedback mechanisms are essential: productivity gains that come at the cost of quality create hidden debt that compounds over time. Without systematic quality tracking alongside throughput metrics, organizations may celebrate efficiency improvements while accumulating problems.
+
 **Outcome Feedback** connects workflow outputs to ultimate results. This type of feedback requires tracking what happens after workflow outputs enter the world. Did the recommended actions produce expected results? Did the predicted outcomes materialize? Did stakeholders find the outputs useful? Outcome feedback grounds workflow performance in real-world impact rather than internal metrics.
 
 **User Experience Feedback** captures how workflow participants experience their involvement. Do human participants find the workflow usable and valuable? Do they trust AI outputs? Are they engaged appropriately or experiencing automation fatigue? User experience feedback reveals issues that pure performance metrics might miss.
@@ -623,3 +625,23 @@ Leaders should actively avoid these habits that undermine AI workflow effectiven
 9. **Scaling prematurely.** Expanding workflows before they are stable and proven creates problems at larger scale that are harder to diagnose and address. Validate before scaling.
 
 10. **Working in isolation.** Designing workflows without input from affected stakeholders, similar organizations, or available research produces inferior designs. Seek diverse input and learn from others.
+
+---
+
+## Works Cited
+
+1. Deming, W. Edwards. *Out of the Crisis.* MIT Press, 1986.
+
+2. Ransbotham, Sam, et al. "Expanding AI's Impact With Organizational Learning." MIT Sloan Management Review and Boston Consulting Group, October 2024.
+
+3. Davenport, Thomas H., and Julia Kirby. *Only Humans Need Apply: Winners and Losers in the Age of Smart Machines.* Harper Business, 2016.
+
+4. Brynjolfsson, Erik, and Andrew McAfee. *Machine, Platform, Crowd: Harnessing Our Digital Future.* W.W. Norton & Company, 2017.
+
+5. Raisch, Sebastian, and Sebastian Krakowski. "Artificial Intelligence and Management: The Automation-Augmentation Paradox." *Academy of Management Review* 46, no. 1 (2021): 192-210.
+
+6. Daugherty, Paul R., and H. James Wilson. *Human + Machine: Reimagining Work in the Age of AI.* Harvard Business Review Press, 2018.
+
+7. Autor, David H. "Why Are There Still So Many Jobs? The History and Future of Workplace Automation." *Journal of Economic Perspectives* 29, no. 3 (2015): 3-30.
+
+8. Anthropic. "Claude's Constitution: The Rules Claude Follows." Anthropic, 2024.
